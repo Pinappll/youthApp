@@ -1,0 +1,50 @@
+{% extends 'crud/index.html.twig' %}
+
+{% block title %}{{ user.firstName }} {{ user.lastName }}{% endblock %}
+
+{% block crud_title %}{{ user.firstName }} {{ user.lastName }}{% endblock %}
+
+{% block crud_actions %}
+    <a href="{{ path('app_user_index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+        Retour à la liste
+    </a>
+    <a href="{{ path('app_user_edit', {'id': user.id}) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+        Modifier
+    </a>
+{% endblock %}
+
+{% block crud_content %}
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Informations de l'utilisateur
+            </h3>
+        </div>
+        <div class="border-t border-gray-200">
+            <dl>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Nom complet</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ user.firstName }} {{ user.lastName }}</dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Email</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ user.email }}</dd>
+                </div>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Rôles</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {% for role in user.roles %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                {{ role|replace({'ROLE_': ''}) }}
+                            </span>
+                        {% endfor %}
+                    </dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Secteur</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ user.sector.name }}</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+{% endblock %} 

@@ -1,0 +1,82 @@
+{% extends 'crud/index.html.twig' %}
+
+{% block title %}{{ youth.firstName }} {{ youth.lastName }}{% endblock %}
+
+{% block crud_title %}{{ youth.firstName }} {{ youth.lastName }}{% endblock %}
+
+{% block crud_actions %}
+    <a href="{{ path('app_youth_index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+        Retour à la liste
+    </a>
+    <a href="{{ path('app_youth_edit', {'id': youth.id}) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+        Modifier
+    </a>
+{% endblock %}
+
+{% block crud_content %}
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Informations du jeune
+            </h3>
+        </div>
+        <div class="border-t border-gray-200">
+            <dl>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Nom complet</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.firstName }} {{ youth.lastName }}</dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Date de naissance</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.birthDate|date('d/m/Y') }}</dd>
+                </div>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Téléphone</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.phone }}</dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Adresse</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.address }}</dd>
+                </div>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Église</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.church.name }}</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Historique des présences</h3>
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <ul class="divide-y divide-gray-200">
+                {% for attendance in youth.attendances|sort((a, b) => b.event.date <=> a.event.date) %}
+                    <li class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm font-medium text-indigo-600">
+                                <a href="{{ path('app_event_show', {'id': attendance.event.id}) }}" class="hover:text-indigo-900">
+                                    {{ attendance.event.name }}
+                                </a>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-500">
+                                    {{ attendance.event.date|date('d/m/Y H:i') }}
+                                </div>
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ attendance.isPresent ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ attendance.isPresent ? 'Présent' : 'Absent' }}
+                                </span>
+                            </div>
+                        </div>
+                        {% if attendance.comment %}
+                            <div class="mt-2 text-sm text-gray-500">
+                                {{ attendance.comment }}
+                            </div>
+                        {% endif %}
+                    </li>
+                {% else %}
+                    <li class="px-4 py-4 sm:px-6 text-sm text-gray-500">Aucune présence enregistrée</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %} 

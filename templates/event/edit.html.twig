@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier l'événement{% endblock %}
+
+{% block body %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-semibold text-gray-900">Modifier l'événement</h1>
+            <div class="flex space-x-3">
+                <a href="{{ path('app_event_index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Retour à la liste
+                </a>
+                <a href="{{ path('app_event_show', {'id': event.id}) }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Voir les détails
+                </a>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+                <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+                    <div class="grid grid-cols-1 gap-6">
+                        {{ form_row(form.name) }}
+                        {{ form_row(form.date) }}
+                        {{ form_row(form.location) }}
+                        {% if form.sector is defined %}
+                            {{ form_row(form.sector) }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    {% if is_granted('delete', event) %}
+                        <form method="post" action="{{ path('app_event_delete', {'id': event.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" class="inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ event.id) }}">
+                            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Supprimer
+                            </button>
+                        </form>
+                    {% endif %}
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Enregistrer
+                    </button>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{% endblock %} 

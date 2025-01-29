@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord{% endblock %}
+
+{% block body %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-2xl font-semibold text-gray-900">Tableau de bord</h1>
+
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {# Statistiques globales #}
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">
+                                    Total des jeunes
+                                </dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">
+                                        {{ statistics.totalYouths }}
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">
+                                    Événements à venir
+                                </dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">
+                                        {{ statistics.upcomingEvents }}
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">
+                                    Taux de présence moyen
+                                </dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">
+                                        {{ statistics.averageAttendance }}%
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Prochains événements #}
+        <div class="mt-8">
+            <h2 class="text-lg font-medium text-gray-900">Prochains événements</h2>
+            <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
+                <ul class="divide-y divide-gray-200">
+                    {% for event in upcomingEvents %}
+                        <li class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm font-medium text-indigo-600">
+                                    <a href="{{ path('app_event_show', {'id': event.id}) }}" class="hover:text-indigo-900">
+                                        {{ event.name }}
+                                    </a>
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ event.date|date('d/m/Y H:i') }}
+                                </div>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li class="px-4 py-4 sm:px-6 text-sm text-gray-500">Aucun événement à venir</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

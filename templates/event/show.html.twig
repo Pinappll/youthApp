@@ -1,0 +1,72 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ event.name }}{% endblock %}
+
+{% block body %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-semibold text-gray-900">{{ event.name }}</h1>
+            <div class="flex space-x-3">
+                <a href="{{ path('app_event_index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Retour à la liste
+                </a>
+                {% if is_granted('edit', event) %}
+                    <a href="{{ path('app_event_edit', {'id': event.id}) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                        Modifier
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Détails de l'événement
+                    </h3>
+                </div>
+                <div class="border-t border-gray-200">
+                    <dl>
+                        <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Nom</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.name }}</dd>
+                        </div>
+                        <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Date</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.date|date('d/m/Y H:i') }}</dd>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Lieu</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.location }}</dd>
+                        </div>
+                        <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Secteur</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.sector.name }}</dd>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Créé le</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.createdAt|date('d/m/Y H:i') }}</dd>
+                        </div>
+                        {% if event.lastModifiedAt %}
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Dernière modification</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.lastModifiedAt|date('d/m/Y H:i') }}</dd>
+                            </div>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <a href="{{ path('app_event_attendance', {'id': event.id}) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                    Gérer les présences
+                </a>
+                <a href="{{ path('app_event_export', {'id': event.id}) }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Exporter en PDF
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

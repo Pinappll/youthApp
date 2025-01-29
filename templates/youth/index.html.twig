@@ -1,0 +1,67 @@
+{% extends 'crud/index.html.twig' %}
+
+{% block title %}Jeunes{% endblock %}
+
+{% block crud_title %}Jeunes{% endblock %}
+
+{% block crud_actions %}
+    <a href="{{ path('app_youth_new') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+        Nouveau jeune
+    </a>
+{% endblock %}
+
+{% block crud_content %}
+    <div class="flex flex-col">
+        <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Église</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de naissance</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Téléphone</th>
+                                <th scope="col" class="relative px-6 py-3">
+                                    <span class="sr-only">Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for youth in youths %}
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ youth.firstName }} {{ youth.lastName }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ youth.church.name }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ youth.birthDate|date('d/m/Y') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ youth.phone }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-3">
+                                            <a href="{{ path('app_youth_show', {'id': youth.id}) }}" class="text-indigo-600 hover:text-indigo-900">Voir</a>
+                                            <a href="{{ path('app_youth_edit', {'id': youth.id}) }}" class="text-yellow-600 hover:text-yellow-900">Modifier</a>
+                                            <form method="post" action="{{ path('app_youth_delete', {'id': youth.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce jeune ?');" class="inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ youth.id) }}">
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Supprimer</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Aucun jeune trouvé</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

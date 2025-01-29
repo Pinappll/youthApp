@@ -1,0 +1,26 @@
+{% extends 'crud/index.html.twig' %}
+
+{% block crud_content %}
+    {{ form_start(form, {'attr': {'class': 'space-y-8 divide-y divide-gray-200'}}) }}
+        <div class="space-y-8 divide-y divide-gray-200 sm:space-y-5">
+            <div class="space-y-6 sm:space-y-5">
+                <div class="space-y-6 sm:space-y-5">
+                    {% block form_fields %}
+                        {{ form_widget(form) }}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-5">
+            <div class="flex justify-end space-x-3">
+                <a href="{{ path(index_route) }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Retour
+                </a>
+                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    {{ button_label|default('Enregistrer') }}
+                </button>
+            </div>
+        </div>
+    {{ form_end(form) }}
+{% endblock %} 

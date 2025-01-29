@@ -1,0 +1,68 @@
+{% extends 'crud/index.html.twig' %}
+
+{% block title %}{{ church.name }}{% endblock %}
+
+{% block crud_title %}{{ church.name }}{% endblock %}
+
+{% block crud_actions %}
+    <a href="{{ path('app_church_index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+        Retour à la liste
+    </a>
+    <a href="{{ path('app_church_edit', {'id': church.id}) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+        Modifier
+    </a>
+{% endblock %}
+
+{% block crud_content %}
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Informations de l'église
+            </h3>
+        </div>
+        <div class="border-t border-gray-200">
+            <dl>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Nom</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ church.name }}</dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Adresse</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ church.address }}</dd>
+                </div>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Secteur</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ church.sector.name }}</dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Nombre de jeunes</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ church.youths|length }}</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Jeunes de l'église</h3>
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <ul class="divide-y divide-gray-200">
+                {% for youth in church.youths %}
+                    <li class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm font-medium text-indigo-600">
+                                <a href="{{ path('app_youth_show', {'id': youth.id}) }}" class="hover:text-indigo-900">
+                                    {{ youth.firstName }} {{ youth.lastName }}
+                                </a>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                {{ youth.birthDate|date('d/m/Y') }}
+                            </div>
+                        </div>
+                    </li>
+                {% else %}
+                    <li class="px-4 py-4 sm:px-6 text-sm text-gray-500">Aucun jeune dans cette église</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %} 

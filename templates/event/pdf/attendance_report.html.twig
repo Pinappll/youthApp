@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport de présence - {{ event.name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        h1 { text-align: center; color: #333; }
+        .event-info { margin-bottom: 20px; }
+        .church-name { 
+            background: #f3f4f6;
+            padding: 10px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background: #f9fafb; }
+        .present { color: green; }
+        .absent { color: red; }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rapport de présence</h1>
+    
+    <div class="event-info">
+        <h2>{{ event.name }}</h2>
+        <p>Date : {{ event.date|date('d/m/Y H:i') }}</p>
+        <p>Lieu : {{ event.location }}</p>
+        <p>Secteur : {{ event.sector.name }}</p>
+    </div>
+
+    {% for church in churches %}
+        <div class="church-name">{{ church.name }}</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Présence</th>
+                    <th>Commentaire</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for youth in church.youths %}
+                    {% set attendance = attendances[youth.id] ?? null %}
+                    <tr>
+                        <td>{{ youth.lastName }}</td>
+                        <td>{{ youth.firstName }}</td>
+                        <td class="{{ attendance and attendance.isPresent ? 'present' : 'absent' }}">
+                            {{ attendance and attendance.isPresent ? 'Présent' : 'Absent' }}
+                        </td>
+                        <td>{{ attendance ? attendance.comment : '' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endfor %}
+
+    <div class="footer">
+        <p>Généré le {{ "now"|date('d/m/Y H:i') }}</p>
+    </div>
+</body>
+</html> 

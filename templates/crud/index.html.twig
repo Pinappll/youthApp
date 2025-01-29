@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-semibold text-gray-900">{% block crud_title %}{% endblock %}</h1>
+            <div class="flex space-x-3">
+                {% block crud_actions %}{% endblock %}
+            </div>
+        </div>
+
+        <div class="mt-8">
+            {% block crud_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
