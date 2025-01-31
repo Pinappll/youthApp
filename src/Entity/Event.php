@@ -7,10 +7,15 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: EventRepository::class)]
 class Event
 {
+    public const SCOPE_GENERAL = 'general';
+    public const SCOPE_SECTOR = 'sector';
+    public const SCOPE_CHURCH = 'church';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -40,10 +45,26 @@ class Event
     #[ORM\ManyToOne]
     private ?User $createdBy = null;
 
+    #[ORM\Column(length: 20)]
+    private ?string $scope = self::SCOPE_GENERAL;
+
+    #[ORM\ManyToOne]
+    private ?Sector $targetSector = null;
+
+    #[ORM\ManyToOne]
+    private ?Church $targetChurch = null;
+
+    /**
+     * @var Collection<int, Youth>
+     */
+    #[Assert\Valid]
+    private ?Collection $additionalYouths = null;
+
     public function __construct()
     {
         $this->attendances = new ArrayCollection();
         $this->createdAt = new \DateTime();
+        $this->additionalYouths = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -157,4 +178,77 @@ class Event
         $this->createdBy = $createdBy;
         return $this;
     }
-} 
+
+    public function getScope(): ?string
+    {
+        return $this->scope;
+    }
+
+    public function setScope(string $scope): static
+    {
+        $this->scope = $scope;
+        return $this;
+    }
+
+    public function getTargetSector(): ?Sector
+    {
+        return $this->targetSector;
+    }
+
+    public function setTargetSector(?Sector $targetSector): static
+    {
+        $this->targetSector = $targetSector;
+        return $this;
+    }
+
+    public function getTargetChurch(): ?Church
+    {
+        return $this->targetChurch;
+    }
+
+    public function setTargetChurch(?Church $targetChurch): static
+    {
+        $this->targetChurch = $targetChurch;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Youth>|null
+     */
+    public function getAdditionalYouths(): ?Collection
+    {
+        return $this->additionalYouths;
+    }
+
+    public function setAdditionalYouths(?Collection $youths): static
+    {
+        $this->additionalYouths = $youths;
+        return $this;
+    }
+
+    public function addAdditionalYouth(Youth $youth): static
+    {
+        if (!$this->additionalYouths->contains($youth)) {
+            $this->additionalYouths->add($youth);
+        }
+        return $this;
+    }
+
+    public function removeAdditionalYouth(Youth $youth): static
+    {
+        $this->additionalYouths->removeElement($youth);
+        return $this;
+    }
+
+    public function canBeModified(): bool
+    {
+        $now = new \DateTime();
+        $limitDate = $this->createdAt->modify('+4 days');
+        return $now <= $limitDate;
+    }
+
+    public function isLocked(): bool
+    {
+        return !$this->canBeModified();
+    }
+}

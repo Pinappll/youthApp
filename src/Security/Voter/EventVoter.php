@@ -70,17 +70,16 @@ class EventVoter extends Voter
 
     private function canDelete(Event $event, User $user): bool
     {
-        // Seuls Admin et Dirigeant peuvent supprimer
-        if (!in_array('ROLE_DIRIGEANT', $user->getRoles())) {
-            return false;
-        }
-
         // Admin peut tout supprimer
         if (in_array('ROLE_ADMIN', $user->getRoles())) {
             return true;
         }
 
         // Dirigeant peut supprimer dans son secteur
-        return $event->getSector() === $user->getSector();
+        if (in_array('ROLE_DIRIGEANT', $user->getRoles())) {
+            return $event->getSector() === $user->getSector();
+        }
+
+        return false;
     }
-} 
+}

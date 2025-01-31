@@ -1,0 +1,39 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const scopeSelect = form.querySelector('[name="event[scope]"]');
+    const targetSelectorsDiv = document.getElementById('targetSelectors');
+    
+    async function updateForm() {
+        const formData = new FormData(form);
+        formData.set('event[scope]', scopeSelect.value);
+        
+        try {
+            const response = await fetch(window.location.pathname, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Update target selectors
+            const newTargetSelectors = doc.getElementById('targetSelectors');
+            if (newTargetSelectors && targetSelectorsDiv) {
+                targetSelectorsDiv.innerHTML = newTargetSelectors.innerHTML;
+            }
+        } catch (error) {
+            console.error('Error updating form:', error);
+        }
+    }
+
+    if (scopeSelect) {
+        scopeSelect.addEventListener('change', updateForm);
+        // Initial update if needed
+        if (scopeSelect.value !== 'general') {
+            updateForm();
+        }
+    }
+});
+</script>

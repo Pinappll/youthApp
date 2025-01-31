@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Event;
+use App\Entity\User;  // Add this use statement if not already present
 use App\Repository\EventRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,21 +39,115 @@ class EventController extends AbstractController
     {
         $event = new Event();
         $event->setSector($this->getUser()->getSector());
+        
+        // Handle AJAX requests for scope changes
+        if ($request->isXmlHttpRequest() && $request->isMethod('POST')) {
+            $formData = $request->request->all('event');
+            if (isset($formData['scope'])) {
+                $event->setScope($formData['scope']);
+                $form = $this->createForm(EventType::class, $event);
+                
+                return $this->render('event/_form_fields.html.twig', [
+                    'form' => $form->createView()
+                ]);
+            }
+        }
+        
+        // Handle normal form submission
         $form = $this->createForm(EventType::class, $event);
-        $form->handleRequest($request);
+        if ($request->isMethod('POST')) {
+            $form->handleRequest($request);
+            if ($form->isValid()) {
+                // Set default scope if not set
+                if (!$event->getScope()) {
+                    $event->setScope('sector');
+                }
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($event);
-            $entityManager->flush();
+                // Clear targetChurch if scope is not 'church'
+                if ($event->getScope() !== 'church') {
+                    $event->setTargetChurch(null);
+                }
 
-            $this->addFlash('success', 'L\'événement a été créé avec succès.');
-            return $this->redirectToRoute('app_event_index');
+                $entityManager->persist($event);
+                $entityManager->flush();
+
+                // Create initial attendances based on scope
+                $youths = $this->getTargetYouths($event, $entityManager);
+                foreach ($youths as $youth) {
+                    $attendance = new Attendance();
+                    $attendance->setEvent($event)
+                        ->setYouth($youth)
+                        ->setCreatedBy($this->getUser());
+                    $entityManager->persist($attendance);
+                }
+
+                // Add additional youths if any were selected
+                if ($form->has('additionalYouths')) {
+                    foreach ($form->get('additionalYouths')->getData() as $youth) {
+                        if (!$event->getAttendances()->exists(function($key, $attendance) use ($youth) {
+                            return $attendance->getYouth() === $youth;
+                        })) {
+                            $attendance = new Attendance();
+                            $attendance->setEvent($event)
+                                ->setYouth($youth)
+                                ->setCreatedBy($this->getUser());
+                            $entityManager->persist($attendance);
+                        }
+                    }
+                }
+
+                $entityManager->flush();
+                $this->addFlash('success', 'L\'événement a été créé avec succès.');
+                return $this->redirectToRoute('app_event_show', ['id' => $event->getId()]);
+            }
         }
 
         return $this->render('event/new.html.twig', [
-            'event' => $event,
-            'form' => $form,
+            'form' => $form->createView(),
+            'event' => $event
         ]);
+    }
+
+    private function getTargetYouths(Event $event, EntityManagerInterface $entityManager): array
+    {
+        $qb = $entityManager->createQueryBuilder()
+            ->select('y')
+            ->from(Youth::class, 'y')
+            ->join('y.church', 'c');
+
+        switch ($event->getScope()) {
+            case 'church':
+                $qb->where('c = :church')
+                   ->setParameter('church', $event->getTargetChurch());
+                break;
+            case 'sector':
+                $qb->where('c.sector = :sector')
+                   ->setParameter('sector', $event->getSector());
+                break;
+            case 'all':
+                // No additional conditions needed
+                break;
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    private function getScopeYouths(Event $event, EntityManagerInterface $entityManager): array
+    {
+        $qb = $entityManager->createQueryBuilder()
+            ->select('y')
+            ->from(Youth::class, 'y')
+            ->join('y.church', 'c');
+
+        if ($event->getScope() === 'church') {
+            $qb->where('c = :church')
+               ->setParameter('church', $event->getTargetChurch());
+        } elseif ($event->getScope() === 'sector') {
+            $qb->where('c.sector = :sector')
+               ->setParameter('sector', $event->getSector());
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     #[Route('/{id}', name: 'app_event_show', methods: ['GET'])]
@@ -109,35 +204,53 @@ class EventController extends AbstractController
         $user = $this->getUser();
         $sector = $event->getSector();
         
-        // Récupérer les églises du secteur
-        $churches = $churchRepository->findBy(['sector' => $sector]);
+        // Get all churches for the additional youths selector
+        $all_churches = $churchRepository->findAll();
         
-        // Récupérer les présences existantes
+        // Get target churches based on event scope and filter out nulls
+        $churches = match($event->getScope() ?? 'sector') {
+            'church' => $event->getTargetChurch() ? [$event->getTargetChurch()] : [],
+            'sector' => $churchRepository->findBy(['sector' => $sector]),
+            'all' => $all_churches,
+            default => $churchRepository->findBy(['sector' => $sector]),
+        };
+
+        // Filter out any null churches
+        $churches = array_filter($churches);
+
+        // Get youths that are in the event's scope
+        $scopeYouths = $this->getScopeYouths($event, $entityManager);
+        $scopeYouthIds = array_map(fn($youth) => $youth->getId(), $scopeYouths);
+        
+        // Get existing attendances
         $attendances = [];
         foreach ($event->getAttendances() as $attendance) {
             $attendances[$attendance->getYouth()->getId()] = $attendance;
         }
 
         if ($request->isMethod('POST')) {
-            $attendanceData = $request->request->get('attendance', []);
+            // Get regular attendance data
+            $attendanceData = $request->request->all('attendance') ?? [];
             
+            // Get additional youths (if any)
+            $additionalYouths = $request->request->all('additional_youths') ?? [];
+            
+            // Process regular attendances
             foreach ($attendanceData as $youthId => $data) {
-                $youth = $entityManager->getReference(Youth::class, $youthId);
-                
-                // Créer ou mettre à jour la présence
+                $this->processAttendance($event, (int)$youthId, $data, $attendances, $entityManager, $user);
+            }
+            
+            // Process additional youths
+            foreach ($additionalYouths as $youthId) {
                 if (!isset($attendances[$youthId])) {
+                    $youth = $entityManager->getReference(Youth::class, $youthId);
                     $attendance = new Attendance();
                     $attendance->setEvent($event)
                         ->setYouth($youth)
-                        ->setCreatedBy($user);
+                        ->setCreatedBy($user)
+                        ->setIsPresent(true);
                     $entityManager->persist($attendance);
-                } else {
-                    $attendance = $attendances[$youthId];
-                    $attendance->setLastModifiedAt(new \DateTime());
                 }
-                
-                $attendance->setIsPresent(!empty($data['isPresent']))
-                    ->setComment($data['comment'] ?? null);
             }
             
             $entityManager->flush();
@@ -149,8 +262,35 @@ class EventController extends AbstractController
         return $this->render('event/attendance.html.twig', [
             'event' => $event,
             'churches' => $churches,
+            'all_churches' => $all_churches,
             'attendances' => $attendances,
+            'scope_youth_ids' => $scopeYouthIds,
         ]);
+    }
+
+    private function processAttendance(
+        Event $event,
+        int $youthId,
+        array $data,
+        array $attendances,
+        EntityManagerInterface $entityManager,
+        User $user
+    ): void {
+        $youth = $entityManager->getReference(Youth::class, $youthId);
+        
+        if (!isset($attendances[$youthId])) {
+            $attendance = new Attendance();
+            $attendance->setEvent($event)
+                ->setYouth($youth)
+                ->setCreatedBy($user);
+            $entityManager->persist($attendance);
+        } else {
+            $attendance = $attendances[$youthId];
+            $attendance->setLastModifiedAt(new \DateTime());
+        }
+        
+        $attendance->setIsPresent(!empty($data['isPresent']))
+            ->setComment($data['comment'] ?? null);
     }
 
     #[Route('/{id}/export', name: 'app_event_export', methods: ['GET'])]

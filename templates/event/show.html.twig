@@ -42,9 +42,28 @@
                         </div>
                         <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Secteur</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.sector.name }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.sector ? event.sector.name : 'Non spécifié' }}</dd>
                         </div>
                         <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Portée</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                {% set scopes = {
+                                    'general': 'Tous les jeunes',
+                                    'sector': event.targetSector ? event.targetSector.name : (event.sector ? event.sector.name ~ ' (Secteur)' : 'Secteur non spécifié'),
+                                    'church': event.targetChurch ? event.targetChurch.name : 'Église non spécifiée'
+                                } %}
+                                {{ event.scope ? scopes[event.scope] : 'Non défini' }}
+                            </dd>
+                        </div>
+                        {% if event.scope == 'church' and event.targetChurch %}
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Église cible</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    {{ event.targetChurch.name }}
+                                </dd>
+                            </div>
+                        {% endif %}
+                        <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Créé le</dt>
                             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.createdAt|date('d/m/Y H:i') }}</dd>
                         </div>
@@ -58,15 +77,42 @@
                 </div>
             </div>
 
-            <div class="mt-6 flex justify-end space-x-3">
-                <a href="{{ path('app_event_attendance', {'id': event.id}) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                    Gérer les présences
-                </a>
-                <a href="{{ path('app_event_export', {'id': event.id}) }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Exporter en PDF
-                </a>
+            <div class="mt-6 flex justify-between items-center">
+                <div class="flex space-x-3">
+                    <a href="{{ path('app_event_attendance', {'id': event.id}) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                        Gérer les présences
+                    </a>
+                    <a href="{{ path('app_event_export', {'id': event.id}) }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Exporter en PDF
+                    </a>
+                </div>
+                {% if is_granted('delete', event) %}
+                    <form method="post" action="{{ path('app_event_delete', {'id': event.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" class="inline">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ event.id) }}">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                            Supprimer
+                        </button>
+                    </form>
+                {% endif %}
             </div>
+            {% if event.isLocked() %}
+                <div class="mt-4 rounded-md bg-yellow-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.485 2.495a.75.75 0 01.753 0l7.5 4.33a.75.75 0 010 1.298l-7.5 4.33a.75.75 0 01-.753 0l-7.5-4.33a.75.75 0 010-1.298l7.5-4.33z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800">Événement verrouillé</h3>
+                            <div class="mt-2 text-sm text-yellow-700">
+                                <p>Cet événement ne peut plus être modifié car il a été créé il y a plus de 4 jours.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

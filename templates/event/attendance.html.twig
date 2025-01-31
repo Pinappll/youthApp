@@ -2,7 +2,21 @@
 
 {% block title %}Gestion des présences - {{ event.name }}{% endblock %}
 
-{% block crud_title %}Gestion des présences - {{ event.name }}{% endblock %}
+{% block crud_title %}
+<div class="flex justify-between items-center">
+    <h1 class="text-2xl font-semibold text-gray-900">
+        Présences - {{ event.name }}
+        <span class="text-sm text-gray-500 block">
+            {% set scopes = {
+                'general': 'Tous les jeunes',
+                'sector': 'Jeunes du secteur ' ~ (event.targetSector ? event.targetSector.name : (event.sector ? event.sector.name : 'Non défini')),
+                'church': event.targetChurch ? 'Jeunes de ' ~ event.targetChurch.name : 'Église non spécifiée'
+            } %}
+            {{ event.scope ? scopes[event.scope] : 'Portée non définie' }}
+        </span>
+    </h1>
+</div>
+{% endblock %}
 
 {% block crud_actions %}
     <a href="{{ path('app_event_show', {'id': event.id}) }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
@@ -12,54 +26,89 @@
 
 {% block crud_content %}
     <form method="post" class="space-y-8">
-        {% for church in churches %}
+        {# Additional Youths Section - Hidden for general scope #}
+        {% if event.scope != 'general' %}
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">{{ church.name }}</h3>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Ajouter des jeunes supplémentaires</h3>
+                    <p class="mt-1 text-sm text-gray-500">Sélectionnez des jeunes à ajouter à cet événement, même s'ils ne font pas partie de la portée définie.</p>
                 </div>
-                <div class="border-t border-gray-200">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Présent</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commentaire</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            {% for youth in church.youths %}
-                                {% set attendance = attendances[youth.id] ?? null %}
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {{ youth.firstName }} {{ youth.lastName }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center h-5">
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+                        {% for church in all_churches %}
+                            <div class="space-y-2">
+                                <h4 class="font-medium text-gray-700">{{ church.name }}</h4>
+                                {% for youth in church.youths %}
+                                    {% if youth.id not in scope_youth_ids %}
+                                        <div class="flex items-center">
                                             <input type="checkbox" 
-                                                   name="attendance[{{ youth.id }}][isPresent]" 
-                                                   {% if attendance and attendance.isPresent %}checked{% endif %}
-                                                   class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                                   name="additional_youths[]" 
+                                                   value="{{ youth.id }}"
+                                                   {% if youth.id in attendances|keys %}checked{% endif %}
+                                                   class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                            <label class="ml-2 text-sm text-gray-700">
+                                                {{ youth.firstName }} {{ youth.lastName }}
+                                            </label>
                                         </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <input type="text" 
-                                               name="attendance[{{ youth.id }}][comment]" 
-                                               value="{{ attendance ? attendance.comment : '' }}"
-                                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                               placeholder="Commentaire">
-                                    </td>
-                                </tr>
-                            {% else %}
-                                <tr>
-                                    <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                        Aucun jeune dans cette église
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
+        {% endif %}
+
+        {% for church in churches %}
+            {% if church %}
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div class="px-4 py-5 sm:px-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">{{ church.name }}</h3>
+                    </div>
+                    <div class="border-t border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Présent</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commentaire</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for youth in church.youths %}
+                                    {% set attendance = attendances[youth.id] ?? null %}
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {{ youth.firstName }} {{ youth.lastName }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center h-5">
+                                                <input type="checkbox" 
+                                                       name="attendance[{{ youth.id }}][isPresent]" 
+                                                       {% if attendance and attendance.isPresent %}checked{% endif %}
+                                                       class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <input type="text" 
+                                                   name="attendance[{{ youth.id }}][comment]" 
+                                                   value="{{ attendance ? attendance.comment : '' }}"
+                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                                   placeholder="Commentaire">
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                            Aucun jeune dans cette église
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
         {% endfor %}
 
         <div class="flex justify-end">
@@ -68,4 +117,4 @@
             </button>
         </div>
     </form>
-{% endblock %} 
+{% endblock %}

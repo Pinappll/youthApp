@@ -1,0 +1,10 @@
+<div id="dynamic-fields">
+    {% if form.vars.value.scope != 'general' %}
+        {% if form.targetSector is defined %}
+            {{ form_row(form.targetSector) }}
+        {% endif %}
+        {% if form.targetChurch is defined %}
+            {{ form_row(form.targetChurch) }}
+        {% endif %}
+    {% endif %}
+</div>

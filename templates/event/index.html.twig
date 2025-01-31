@@ -22,6 +22,7 @@
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lieu</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portée</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Secteur</th>
                                     <th scope="col" class="relative px-6 py-3">
                                         <span class="sr-only">Actions</span>
@@ -41,15 +42,21 @@
                                             {{ event.location }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ event.sector.name }}
+                                            {% set scopes = {
+                                                'general': 'Tous les jeunes',
+                                                'sector': event.targetSector ? event.targetSector.name : (event.sector ? event.sector.name : 'Secteur non spécifié'),
+                                                'church': event.targetChurch ? event.targetChurch.name : 'Église non spécifiée'
+                                            } %}
+                                            {{ event.scope ? scopes[event.scope] : 'Non défini' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ event.sector ? event.sector.name : 'Non spécifié' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex justify-end space-x-2">
                                                 <a href="{{ path('app_event_show', {'id': event.id}) }}" class="text-indigo-600 hover:text-indigo-900">Voir</a>
-                                                {% if is_granted('edit', event) %}
+                                                {% if not event.isLocked() and is_granted('edit', event) %}
                                                     <a href="{{ path('app_event_edit', {'id': event.id}) }}" class="text-yellow-600 hover:text-yellow-900">Modifier</a>
-                                                {% endif %}
-                                                {% if is_granted('delete', event) %}
                                                     <form method="post" action="{{ path('app_event_delete', {'id': event.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" class="inline">
                                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ event.id) }}">
                                                         <button type="submit" class="text-red-600 hover:text-red-900">Supprimer</button>
@@ -61,7 +68,7 @@
                                     </tr>
                                 {% else %}
                                     <tr>
-                                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                             Aucun événement trouvé
                                         </td>
                                     </tr>
