@@ -1,8 +1,18 @@
-{% extends 'crud/form.html.twig' %}
+{% extends 'crud/index.html.twig' %}
 
-{% block title %}Modifier le jeune{% endblock %}
+{% block title %}Modifier {{ youth.firstName }} {{ youth.lastName }}{% endblock %}
 
-{% block crud_title %}Modifier le jeune{% endblock %}
+{% block crud_title %}
+    <div class="flex items-center space-x-4">
+        <div class="w-16 h-16 flex-shrink-0">
+            <img src="{{ youth.photo ? asset(youth.photo) : asset('images/userDefaultImg.jpg') }}" 
+                 alt="{{ youth.firstName }} {{ youth.lastName }}"
+                 class="w-full h-full rounded-full object-cover shadow-lg">
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">Modifier {{ youth.firstName }} {{ youth.lastName }}</h1>
+    </div>
+{% endblock %}
 
-{% set index_route = 'app_youth_index' %}
-{% set button_label = 'Enregistrer' %} 
+{% block crud_content %}
+    {% include 'youth/_form.html.twig' with {'button_label': 'Mettre à jour'} %}
+{% endblock %}

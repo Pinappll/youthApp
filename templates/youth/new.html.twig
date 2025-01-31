@@ -1,8 +1,14 @@
-{% extends 'crud/form.html.twig' %}
+{% extends 'crud/index.html.twig' %}
 
 {% block title %}Nouveau jeune{% endblock %}
 
-{% block crud_title %}Créer un jeune{% endblock %}
+{% block crud_title %}
+    <h1 class="text-3xl font-bold text-gray-900">Créer un nouveau jeune</h1>
+{% endblock %}
+
+{% block crud_content %}
+    {% include 'youth/_form.html.twig' with {'button_label': 'Créer'} %}
+{% endblock %}
 
 {% set index_route = 'app_youth_index' %}
-{% set button_label = 'Créer' %} 
+{% set button_label = 'Créer' %}

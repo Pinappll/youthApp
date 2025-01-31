@@ -2,55 +2,138 @@
 
 {% block title %}{{ youth.firstName }} {{ youth.lastName }}{% endblock %}
 
-{% block crud_title %}{{ youth.firstName }} {{ youth.lastName }}{% endblock %}
+{% block crud_title %}
+    <div class="flex items-center space-x-4">
+        <div class="w-16 h-16 flex-shrink-0">
+            <img src="{{ youth.photo ? asset(youth.photo) : asset('images/userDefaultImg.jpg') }}" 
+                 alt="{{ youth.firstName }} {{ youth.lastName }}"
+                 class="w-full h-full rounded-full object-cover shadow-lg">
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">{{ youth.firstName }} {{ youth.lastName }}</h1>
+    </div>
+{% endblock %}
 
 {% block crud_actions %}
-    <a href="{{ path('app_youth_index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-        Retour à la liste
-    </a>
-    <a href="{{ path('app_youth_edit', {'id': youth.id}) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-        Modifier
-    </a>
+    <div class="flex space-x-4">
+        <a href="{{ path('app_youth_index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Retour
+        </a>
+        <a href="{{ path('app_youth_edit', {'id': youth.id}) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Modifier
+        </a>
+    </div>
 {% endblock %}
 
 {% block crud_content %}
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Informations du jeune
-            </h3>
-        </div>
-        <div class="border-t border-gray-200">
-            <dl>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Nom complet</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.firstName }} {{ youth.lastName }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Date de naissance</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.birthDate|date('d/m/Y') }}</dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Téléphone</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.phone }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Adresse</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.address }}</dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Église</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.church.name }}</dd>
-                </div>
-            </dl>
-        </div>
-    </div>
-
-    <div class="mt-8">
-        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Historique des présences</h3>
+    <div class="space-y-8">
+        {# Information Card #}
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Informations du jeune
+                </h3>
+            </div>
+            <div class="border-t border-gray-200">
+                <dl>
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Nom complet</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.firstName }} {{ youth.lastName }}</dd>
+                    </div>
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Date de naissance</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.birthDate|date('d/m/Y') }}</dd>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Téléphone</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.phone }}</dd>
+                    </div>
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Adresse</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.address }}</dd>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Église</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.church.name }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        {# Attendance History #}
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">Historique des présences</h3>
+                    <div class="flex items-center space-x-2">
+                        {% if presence is not empty or month is not empty %}
+                            <span class="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full">
+                                {{ presence == 'present' ? 'Présent' : (presence == 'absent' ? 'Absent' : '') }}
+                                {{ month ? '• ' ~ month|date('F Y') : '' }}
+                            </span>
+                        {% endif %}
+                        <button type="button" 
+                                onclick="toggleFilters()"
+                                class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                            Filtres
+                        </button>
+                    </div>
+                </div>
+
+                <div id="filterPanel" class="hidden mt-4 p-4 bg-gray-50 rounded-md">
+                    <form id="filterForm" class="flex flex-wrap gap-4" method="get">
+                        <div class="w-full sm:w-auto">
+                            <fieldset class="space-y-2">
+                                <legend class="block text-sm font-medium text-gray-700">Présence</legend>
+                                <div class="flex space-x-4">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="presence" value="" {{ presence is empty ? 'checked' : '' }}
+                                               class="form-radio h-4 w-4 text-indigo-600">
+                                        <span class="ml-2 text-sm text-gray-700">Tous</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="presence" value="present" {{ presence == 'present' ? 'checked' : '' }}
+                                               class="form-radio h-4 w-4 text-indigo-600">
+                                        <span class="ml-2 text-sm text-gray-700">Présent</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="presence" value="absent" {{ presence == 'absent' ? 'checked' : '' }}
+                                               class="form-radio h-4 w-4 text-indigo-600">
+                                        <span class="ml-2 text-sm text-gray-700">Absent</span>
+                                    </label>
+                                </div>
+                            </fieldset>
+                        </div>
+                        <div class="w-full sm:w-auto">
+                            <label for="month" class="block text-sm font-medium text-gray-700">Période</label>
+                            <input type="month" id="month" name="month" value="{{ month }}"
+                                   class="mt-1 block w-full sm:w-48 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div class="w-full sm:w-auto flex items-end space-x-2">
+                            <button type="submit" 
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Appliquer
+                            </button>
+                            <button type="button" 
+                                    onclick="clearFilters()"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Réinitialiser
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <ul class="divide-y divide-gray-200">
-                {% for attendance in youth.attendances|sort((a, b) => b.event.date <=> a.event.date) %}
+                {% for attendance in attendances %}
                     <li class="px-4 py-4 sm:px-6">
                         <div class="flex items-center justify-between">
                             <div class="text-sm font-medium text-indigo-600">
@@ -77,6 +160,89 @@
                     <li class="px-4 py-4 sm:px-6 text-sm text-gray-500">Aucune présence enregistrée</li>
                 {% endfor %}
             </ul>
+
+            {% if totalPages > 1 %}
+                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            {% if currentPage > 1 %}
+                                <a href="{{ path('app_youth_show', {
+                                    id: youth.id,
+                                    page: currentPage - 1,
+                                    presence: presence,
+                                    month: month
+                                }) }}" class="btn-pagination">Précédent</a>
+                            {% endif %}
+                            {% if currentPage < totalPages %}
+                                <a href="{{ path('app_youth_show', {
+                                    id: youth.id,
+                                    page: currentPage + 1,
+                                    presence: presence,
+                                    month: month
+                                }) }}" class="btn-pagination">Suivant</a>
+                            {% endif %}
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                    {% for i in 1..totalPages %}
+                                        <a href="{{ path('app_youth_show', {
+                                            id: youth.id,
+                                            page: i,
+                                            presence: presence,
+                                            month: month
+                                        }) }}" 
+                                           class="relative inline-flex items-center px-4 py-2 border text-sm font-medium
+                                                {% if currentPage == i %}
+                                                    z-10 bg-indigo-50 border-indigo-500 text-indigo-600
+                                                {% else %}
+                                                    bg-white border-gray-300 text-gray-500 hover:bg-gray-50
+                                                {% endif %}">
+                                            {{ i }}
+                                        </a>
+                                    {% endfor %}
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
-{% endblock %} 
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+function toggleFilters() {
+    const panel = document.getElementById('filterPanel');
+    panel.classList.toggle('hidden');
+}
+
+function clearFilters() {
+    const form = document.getElementById('filterForm');
+    const radios = form.querySelectorAll('input[name="presence"]');
+    radios[0].checked = true; // Select "Tous"
+    form.querySelector('#month').value = '';
+    form.submit();
+}
+
+// Preserve other query parameters when submitting form
+document.getElementById('filterForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const params = new URLSearchParams(window.location.search);
+    const formData = new FormData(this);
+    
+    for (const [key, value] of formData.entries()) {
+        if (value) {
+            params.set(key, value);
+        } else {
+            params.delete(key);
+        }
+    }
+    
+    params.set('page', '1');
+    window.location.href = `${window.location.pathname}?${params.toString()}`;
+});
+</script>
+{% endblock %}

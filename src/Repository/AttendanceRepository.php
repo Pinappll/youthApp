@@ -42,4 +42,57 @@ class AttendanceRepository extends ServiceEntityRepository
 
         return round($result, 1);
     }
-} 
+
+    public function findAttendancesByCriteria(array $criteria, int $limit = null, int $offset = null)
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->leftJoin('a.event', 'e')
+            ->where('a.youth = :youth')
+            ->setParameter('youth', $criteria['youth'])
+            ->orderBy('e.date', 'DESC');
+
+        if (!empty($criteria['presence'])) {
+            $qb->andWhere('a.isPresent = :presence')
+               ->setParameter('presence', $criteria['presence'] === 'present');
+        }
+
+        if (!empty($criteria['month'])) {
+            $date = new \DateTime($criteria['month'] . '-01');
+            $qb->andWhere('e.date >= :startDate')
+               ->andWhere('e.date < :endDate')
+               ->setParameter('startDate', $date->format('Y-m-01'))
+               ->setParameter('endDate', $date->format('Y-m-t'));
+        }
+
+        if ($limit) {
+            $qb->setMaxResults($limit)
+               ->setFirstResult($offset);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function countAttendancesByCriteria(array $criteria)
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->leftJoin('a.event', 'e')
+            ->where('a.youth = :youth')
+            ->setParameter('youth', $criteria['youth']);
+
+        if (!empty($criteria['presence'])) {
+            $qb->andWhere('a.isPresent = :presence')
+               ->setParameter('presence', $criteria['presence'] === 'present');
+        }
+
+        if (!empty($criteria['month'])) {
+            $date = new \DateTime($criteria['month'] . '-01');
+            $qb->andWhere('e.date >= :startDate')
+               ->andWhere('e.date < :endDate')
+               ->setParameter('startDate', $date->format('Y-m-01'))
+               ->setParameter('endDate', $date->format('Y-m-t'));
+        }
+
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+}

@@ -35,8 +35,8 @@ class AppFixtures extends Fixture
         // Création des utilisateurs
         $admin = new User();
         $admin->setEmail('admin@example.com')
-            ->setFirstName('Admin')
-            ->setLastName('User')
+            ->setFirstName('Jean')
+            ->setLastName('Dupont')
             ->setRoles(['ROLE_ADMIN'])
             ->setSector($sector1)
             ->setPassword($this->passwordHasher->hashPassword($admin, 'admin123'));
@@ -44,8 +44,8 @@ class AppFixtures extends Fixture
 
         $dirigeant = new User();
         $dirigeant->setEmail('dirigeant@example.com')
-            ->setFirstName('Dirigeant')
-            ->setLastName('User')
+            ->setFirstName('Marie')
+            ->setLastName('Leclerc')
             ->setRoles(['ROLE_DIRIGEANT'])
             ->setSector($sector1)
             ->setPassword($this->passwordHasher->hashPassword($dirigeant, 'dirigeant123'));
@@ -53,8 +53,8 @@ class AppFixtures extends Fixture
 
         $enseignant = new User();
         $enseignant->setEmail('enseignant@example.com')
-            ->setFirstName('Enseignant')
-            ->setLastName('User')
+            ->setFirstName('Paul')
+            ->setLastName('Bernard')
             ->setRoles(['ROLE_ENSEIGNANT'])
             ->setSector($sector2)
             ->setPassword($this->passwordHasher->hashPassword($enseignant, 'enseignant123'));
@@ -63,32 +63,35 @@ class AppFixtures extends Fixture
         // Création des églises
         $church1 = new Church();
         $church1->setName('Église Saint-Pierre')
-            ->setAddress('123 rue de la Paix')
+            ->setAddress('12 Place de l’Église, 75001 Paris')
             ->setSector($sector1);
         $manager->persist($church1);
 
         $church2 = new Church();
         $church2->setName('Église Saint-Paul')
-            ->setAddress('456 avenue de la Liberté')
+            ->setAddress('34 Rue des Chapelles, 69002 Lyon')
             ->setSector($sector1);
         $manager->persist($church2);
 
         $church3 = new Church();
         $church3->setName('Église Notre-Dame')
-            ->setAddress('789 boulevard du Progrès')
+            ->setAddress('56 Avenue du Sacré-Cœur, 13003 Marseille')
             ->setSector($sector2);
         $manager->persist($church3);
 
         // Création des jeunes
+        $noms = ['Martin', 'Lefebvre', 'Moreau', 'Girard', 'Simon'];
+        $prenoms = ['Lucas', 'Emma', 'Noah', 'Léa', 'Gabriel'];
+        
         $youths = [];
         foreach ([$church1, $church2, $church3] as $church) {
-            for ($i = 1; $i <= 5; $i++) {
+            for ($i = 0; $i < 5; $i++) {
                 $youth = new Youth();
-                $youth->setFirstName("Prénom$i")
-                    ->setLastName("Nom$i")
-                    ->setAddress("Adresse $i")
-                    ->setBirthDate(new \DateTime("-" . (15 + $i) . " years"))
-                    ->setPhone("060000000$i")
+                $youth->setFirstName($prenoms[$i])
+                    ->setLastName($noms[$i])
+                    ->setAddress('Rue des Jeunes ' . ($i + 1))
+                    ->setBirthDate(new \DateTime('-' . (16 + $i) . ' years'))
+                    ->setPhone("06" . rand(10000000, 99999999))
                     ->setChurch($church);
                 $manager->persist($youth);
                 $youths[] = $youth;
@@ -97,11 +100,12 @@ class AppFixtures extends Fixture
 
         // Création des événements
         $events = [];
+        $eventNames = ['Réunion de prière', 'Concert Gospel', 'Conférence jeunesse', 'Camp d’été', 'Atelier de solidarité'];
         for ($i = -2; $i <= 2; $i++) {
             $event = new Event();
-            $event->setName("Événement " . ($i + 3))
-                ->setDate(new \DateTime("$i weeks"))
-                ->setLocation("Lieu " . ($i + 3))
+            $event->setName($eventNames[$i + 2])
+                ->setDate(new \DateTime(($i * 7) . ' days'))
+                ->setLocation("Salle " . ($i + 3))
                 ->setSector($i < 0 ? $sector1 : $sector2)
                 ->setCreatedAt(new \DateTime())
                 ->setCreatedBy($admin);
@@ -128,4 +132,4 @@ class AppFixtures extends Fixture
 
         $manager->flush();
     }
-} 
+}

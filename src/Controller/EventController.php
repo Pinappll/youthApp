@@ -13,6 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\ChurchRepository;
 use App\Entity\Attendance;
 use App\Entity\Youth;
+use App\Form\EventType;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -37,7 +38,6 @@ class EventController extends AbstractController
     {
         $event = new Event();
         $event->setSector($this->getUser()->getSector());
-        
         $form = $this->createForm(EventType::class, $event);
         $form->handleRequest($request);
 

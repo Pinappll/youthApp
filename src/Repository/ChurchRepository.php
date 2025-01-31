@@ -43,4 +43,15 @@ class ChurchRepository extends ServiceEntityRepository
             ];
         }, $results);
     }
-} 
+
+    public function findDistinctSectors(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->select('s.id', 's.name')
+            ->join('c.sector', 's')
+            ->groupBy('s.id', 's.name')
+            ->orderBy('s.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+}

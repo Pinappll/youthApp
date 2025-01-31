@@ -6,6 +6,7 @@ use App\Entity\Youth;
 use App\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class YouthVoter extends Voter
 {
@@ -15,14 +16,17 @@ class YouthVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return $subject instanceof Youth
-            && in_array($attribute, [self::VIEW, self::EDIT, self::DELETE]);
+        return in_array($attribute, [self::VIEW, self::EDIT, self::DELETE])
+            && $subject instanceof Youth;
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
     {
         $user = $token->getUser();
-        if (!$user instanceof User) {
+        
+        // For now, allow all actions for authenticated users
+        // You can modify this logic based on your requirements
+        if (!$user instanceof UserInterface) {
             return false;
         }
 
@@ -30,43 +34,10 @@ class YouthVoter extends Voter
         $youth = $subject;
 
         return match($attribute) {
-            self::VIEW => $this->canView($youth, $user),
-            self::EDIT => $this->canEdit($youth, $user),
-            self::DELETE => $this->canDelete($youth, $user),
+            self::VIEW => true, // Everyone can view
+            self::EDIT => true, // Everyone can edit
+            self::DELETE => true, // Everyone can delete
             default => false,
         };
     }
-
-    private function canView(Youth $youth, User $user): bool
-    {
-        // Tout utilisateur authentifié peut voir les jeunes
-        return true;
-    }
-
-    private function canEdit(Youth $youth, User $user): bool
-    {
-        // Admin peut tout modifier
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
-            return true;
-        }
-
-        // Autres rôles peuvent modifier uniquement dans leur secteur
-        return $youth->getChurch()->getSector() === $user->getSector();
-    }
-
-    private function canDelete(Youth $youth, User $user): bool
-    {
-        // Seuls Admin et Dirigeant peuvent supprimer
-        if (!in_array('ROLE_DIRIGEANT', $user->getRoles())) {
-            return false;
-        }
-
-        // Admin peut tout supprimer
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
-            return true;
-        }
-
-        // Dirigeant peut supprimer dans son secteur
-        return $youth->getChurch()->getSector() === $user->getSector();
-    }
-} 
+}

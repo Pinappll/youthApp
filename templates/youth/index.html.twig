@@ -2,66 +2,311 @@
 
 {% block title %}Jeunes{% endblock %}
 
-{% block crud_title %}Jeunes{% endblock %}
+{% block crud_title %}
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">Jeunes</h1>
+{% endblock %}
 
 {% block crud_actions %}
-    <a href="{{ path('app_youth_new') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+    <a href="{{ path('app_youth_new') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg transition-all duration-200 ease-in-out">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
         Nouveau jeune
     </a>
 {% endblock %}
 
 {% block crud_content %}
-    <div class="flex flex-col">
-        <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Église</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de naissance</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Téléphone</th>
-                                <th scope="col" class="relative px-6 py-3">
-                                    <span class="sr-only">Actions</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            {% for youth in youths %}
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {{ youth.firstName }} {{ youth.lastName }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ youth.church.name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ youth.birthDate|date('d/m/Y') }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ youth.phone }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex justify-end space-x-3">
-                                            <a href="{{ path('app_youth_show', {'id': youth.id}) }}" class="text-indigo-600 hover:text-indigo-900">Voir</a>
-                                            <a href="{{ path('app_youth_edit', {'id': youth.id}) }}" class="text-yellow-600 hover:text-yellow-900">Modifier</a>
-                                            <form method="post" action="{{ path('app_youth_delete', {'id': youth.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce jeune ?');" class="inline">
-                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ youth.id) }}">
-                                                <button type="submit" class="text-red-600 hover:text-red-900">Supprimer</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% else %}
-                                <tr>
-                                    <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Aucun jeune trouvé</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+    <div class="space-y-6">
+        {# Search and Filter Bar #}
+        <div class="bg-white rounded-xl shadow-sm">
+            <form method="GET" action="{{ path('app_youth_index') }}">
+                {# Search Header #}
+                <div class="p-4 border-b border-gray-200">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-1">
+                            <div class="relative">
+                                <input type="text" name="search" 
+                                    value="{{ app.request.get('search') }}"
+                                    placeholder="Rechercher par nom..." 
+                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" 
+                                onclick="toggleFilters()"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                            Filtres
+                            <span class="ml-1.5 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800" id="activeFiltersCount">
+                                0
+                            </span>
+                        </button>
+
+                        <button type="button" 
+                                onclick="toggleView()"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <svg id="grid-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                            </svg>
+                            <svg id="list-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-            </div>
+
+                {# Filter Panel #}
+                <div id="filters-section" class="hidden">
+                    <div class="p-4 border-b border-gray-200 space-y-6">
+                        
+
+                        {# Detailed Filters #}
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {# Church Filter #}
+                            <div>
+                                <label class="text-sm font-medium text-gray-700">Église</label>
+                                <div class="mt-2 max-h-48 overflow-y-auto space-y-2 p-2 border rounded-lg">
+                                    {% for church in churches %}
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="filter_church[]" value="{{ church.id }}"
+                                                   {% if church.id in currentChurches|default([]) %}checked{% endif %}
+                                                   class="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                                            <span class="ml-2 text-sm text-gray-700">{{ church.name }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            {# Sector Filter #}
+                            <div>
+                                <label class="text-sm font-medium text-gray-700">Secteur</label>
+                                <div class="mt-2 max-h-48 overflow-y-auto space-y-2 p-2 border rounded-lg">
+                                    {% for sector in sectors %}
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="filter_sector[]" value="{{ sector.id }}"
+                                                   {% if sector.id in currentSectors|default([]) %}checked{% endif %}
+                                                   class="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                                            <span class="ml-2 text-sm text-gray-700">{{ sector.name }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            {# Age Filter #}
+                            <div>
+                                <label class="text-sm font-medium text-gray-700">Âge</label>
+                                <div class="mt-2 space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="age_group" value="under18"
+                                               {% if currentAgeGroup == 'under18' %}checked{% endif %}
+                                               class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                        <span class="ml-2 text-sm text-gray-700">Moins de 18 ans</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="age_group" value="over18"
+                                               {% if currentAgeGroup == 'over18' %}checked{% endif %}
+                                               class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                        <span class="ml-2 text-sm text-gray-700">18 ans et plus</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="age_group" value=""
+                                               {% if not currentAgeGroup %}checked{% endif %}
+                                               class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                        <span class="ml-2 text-sm text-gray-700">Tous les âges</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Filter Actions #}
+                    <div class="px-4 py-3 bg-gray-50 text-right sm:px-6 flex justify-between items-center">
+                        <button type="button" onclick="resetFilters()" 
+                                class="text-sm text-gray-600 hover:text-gray-900">
+                            Réinitialiser les filtres
+                        </button>
+                        <button type="submit" 
+                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Appliquer les filtres
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# Content Views #}
+        <div id="grid-view" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for youth in youths %}
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="aspect-w-3 aspect-h-4">
+                        <img class="w-full h-full object-cover" 
+                            src="{{ youth.photo ? asset(youth.photo) : asset('images/userDefaultImg.jpg') }}" 
+                            alt="{{ youth.firstName }} {{ youth.lastName }}">
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <h3 class="text-xl font-bold text-gray-900">{{ youth.firstName }} {{ youth.lastName }}</h3>
+                        <div class="space-y-2">
+                            <p class="flex items-center text-gray-600">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                                {{ youth.church.name }}
+                            </p>
+                            <p class="flex items-center text-gray-600">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                {{ youth.birthDate|date('d/m/Y') }}
+                            </p>
+                            <p class="flex items-center text-gray-600">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                                {{ youth.phone }}
+                            </p>
+                        </div>
+                        <div class="pt-4 border-t border-gray-200 flex justify-end space-x-4">
+                            <a href="{{ path('app_youth_show', {'id': youth.id}) }}" 
+                               class="text-indigo-600 hover:text-indigo-900 font-medium">Voir</a>
+                            <a href="{{ path('app_youth_edit', {'id': youth.id}) }}" 
+                               class="text-yellow-600 hover:text-yellow-900 font-medium">Modifier</a>
+                            <form method="post" action="{{ path('app_youth_delete', {'id': youth.id}) }}" 
+                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce jeune ?');" 
+                                  class="inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ youth.id) }}">
+                                <button type="submit" class="text-red-600 hover:text-red-900 font-medium">Supprimer</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-span-full p-8 text-center">
+                    <p class="text-gray-500 text-lg">Aucun jeune trouvé</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div id="list-view" class="hidden divide-y divide-gray-200">
+            {% for youth in youths %}
+                <div class="bg-white p-6 flex items-center space-x-6 hover:bg-gray-50 transition-colors duration-200">
+                    <div class="flex-shrink-0 w-16 h-16">
+                        <img class="w-full h-full rounded-full object-cover" 
+                             src="{{ youth.photo ? asset(youth.photo) : asset('images/userDefaultImg.jpg') }}" 
+                             alt="{{ youth.firstName }} {{ youth.lastName }}">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ youth.firstName }} {{ youth.lastName }}</h3>
+                        <p class="text-sm text-gray-500">{{ youth.church.name }} | {{ youth.birthDate|date('d/m/Y') }}</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="{{ path('app_youth_show', {'id': youth.id}) }}" 
+                           class="text-indigo-600 hover:text-indigo-900">Voir</a>
+                        <a href="{{ path('app_youth_edit', {'id': youth.id}) }}" 
+                           class="text-yellow-600 hover:text-yellow-900">Modifier</a>
+                        <form method="post" action="{{ path('app_youth_delete', {'id': youth.id}) }}" 
+                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce jeune ?');" 
+                              class="inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ youth.id) }}">
+                            <button type="submit" class="text-red-600 hover:text-red-900">Supprimer</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {# Pagination #}
+        <div class="mt-8">
+            <nav aria-label="Page navigation" class="flex justify-center">
+                <ul class="inline-flex space-x-2">
+                    {% if currentPage > 1 %}
+                        <li>
+                            <a href="{{ path('app_youth_index', {'page': currentPage - 1}) }}" 
+                               class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                Précédent
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page in 1..totalPages %}
+                        <li>
+                            <a href="{{ path('app_youth_index', {'page': page}) }}" 
+                               class="px-4 py-2 border {% if page == currentPage %}bg-indigo-600 border-indigo-600 text-white{% else %}border-gray-300 text-gray-700 hover:bg-gray-50{% endif %} rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                {{ page }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                    
+                    {% if currentPage < totalPages %}
+                        <li>
+                            <a href="{{ path('app_youth_index', {'page': currentPage + 1}) }}" 
+                               class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                Suivant
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
     </div>
+
+    <script>
+        function toggleFilters() {
+            const filtersSection = document.getElementById('filters-section');
+            filtersSection.classList.toggle('hidden');
+        }
+
+        function toggleView() {
+            const gridView = document.getElementById('grid-view');
+            const listView = document.getElementById('list-view');
+            const gridIcon = document.getElementById('grid-icon');
+            const listIcon = document.getElementById('list-icon');
+
+            gridView.classList.toggle('hidden');
+            listView.classList.toggle('hidden');
+            gridIcon.classList.toggle('hidden');
+            listIcon.classList.toggle('hidden');
+        }
+
+        function updateActiveFiltersCount() {
+            const checkedFilters = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const ageFilter = document.querySelector('input[name="age_group"]:checked');
+            const count = checkedFilters + (ageFilter && ageFilter.value ? 1 : 0);
+            document.getElementById('activeFiltersCount').textContent = count;
+        }
+
+        function applyAgeFilter(group) {
+            // Remove existing age group input if any
+            const existingInput = document.querySelector('input[name="age_group"]');
+            if (existingInput) {
+                existingInput.value = group;
+            } else {
+                // Create and append a hidden input for age group
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'age_group';
+                input.value = group;
+                document.querySelector('form').appendChild(input);
+            }
+            document.querySelector('form').submit();
+        }
+
+        function resetFilters() {
+            const form = document.querySelector('form');
+            form.reset();
+            form.submit();
+        }
+
+        // Initial count update
+        document.addEventListener('DOMContentLoaded', updateActiveFiltersCount);
+        document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+            input.addEventListener('change', updateActiveFiltersCount);
+        });
+    </script>
 {% endblock %}
