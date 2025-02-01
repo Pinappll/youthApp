@@ -57,7 +57,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if (in_array('ROLE_ADMIN', $roles)) {
             return array_unique(['ROLE_ADMIN', 'ROLE_LEADER', 'ROLE_USER']);
         }
-        // If user is a leader, they get leader and user roles
+        // If user is a leader, they get leader permissions but not admin management
         if (in_array('ROLE_LEADER', $roles)) {
             return array_unique(['ROLE_LEADER', 'ROLE_USER']);
         }
@@ -74,6 +74,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function isAdmin(): bool
     {
         return in_array('ROLE_ADMIN', $this->getRoles());
+    }
+
+    public function canManageScope(): bool
+    {
+        return $this->isAdmin() || $this->isLeader();
     }
 
     public function setRoles(array $roles): static
