@@ -53,8 +53,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
+        // If user is an admin, they get all roles
+        if (in_array('ROLE_ADMIN', $roles)) {
+            return array_unique(['ROLE_ADMIN', 'ROLE_LEADER', 'ROLE_USER']);
+        }
+        // If user is a leader, they get leader and user roles
+        if (in_array('ROLE_LEADER', $roles)) {
+            return array_unique(['ROLE_LEADER', 'ROLE_USER']);
+        }
+        // Default role
         $roles[] = 'ROLE_USER';
         return array_unique($roles);
+    }
+
+    public function isLeader(): bool
+    {
+        return in_array('ROLE_LEADER', $this->getRoles());
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array('ROLE_ADMIN', $this->getRoles());
     }
 
     public function setRoles(array $roles): static
@@ -116,4 +135,4 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return (string) $this->email;
     }
-} 
+}
