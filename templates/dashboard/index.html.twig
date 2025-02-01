@@ -106,6 +106,31 @@
                 </ul>
             </div>
         </div>
+
+        {# Anniversaires à venir #}
+        <div class="mt-8">
+            <h2 class="text-lg font-medium text-gray-900">Anniversaires à venir</h2>
+            <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
+                <ul class="divide-y divide-gray-200">
+                    {% for youth in upcomingBirthdays %}
+                        <li class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm font-medium text-indigo-600">
+                                    <a href="{{ path('app_youth_show', {'id': youth.id}) }}" class="hover:text-indigo-900">
+                                        {{ youth.firstName }} {{ youth.lastName }}
+                                    </a>
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ youth.birthDate|date('d/m') }} ({{ youth.birthDate|age }} ans)
+                                </div>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li class="px-4 py-4 sm:px-6 text-sm text-gray-500">Aucun anniversaire dans les 30 prochains jours</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

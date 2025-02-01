@@ -81,6 +81,11 @@ class Attendance
         return $this;
     }
 
+    public function getIsPresent(): bool
+    {
+        return $this->isPresent;
+    }
+
     public function getComment(): ?string
     {
         return $this->comment;

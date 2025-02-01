@@ -57,4 +57,66 @@ class EventRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
-} 
+
+    public function findFiltered(array $criteria = [], int $page = 1, int $limit = 10): array
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->leftJoin('e.sector', 's')
+            ->leftJoin('e.targetChurch', 'tc')
+            ->leftJoin('e.attendances', 'a')
+            ->addSelect('COUNT(DISTINCT a.id) as total_attendances')
+            ->addSelect('SUM(CASE WHEN a.isPresent = true THEN 1 ELSE 0 END) as present_count')
+            ->groupBy('e.id')
+            ->orderBy('e.date', 'DESC');
+
+        if (!empty($criteria['search'])) {
+            $qb->andWhere('e.name LIKE :search')
+               ->setParameter('search', '%' . $criteria['search'] . '%');
+        }
+
+        if (!empty($criteria['month'])) {
+            $startDate = new \DateTime($criteria['month'] . '-01');
+            $endDate = (clone $startDate)->modify('last day of this month');
+            $qb->andWhere('e.date BETWEEN :start AND :end')
+               ->setParameter('start', $startDate)
+               ->setParameter('end', $endDate);
+        }
+
+        if (!empty($criteria['sectors'])) {
+            $qb->andWhere('e.sector IN (:sectors)')
+               ->setParameter('sectors', $criteria['sectors']);
+        }
+
+        if (!empty($criteria['churches'])) {
+            $qb->andWhere('e.targetChurch IN (:churches)')
+               ->setParameter('churches', $criteria['churches']);
+        }
+
+        $totalItems = count($qb->getQuery()->getResult());
+        $totalPages = ceil($totalItems / $limit);
+
+        $qb->setMaxResults($limit)
+           ->setFirstResult(($page - 1) * $limit);
+
+        $results = $qb->getQuery()->getResult();
+
+        // Calculate attendance rates
+        $events = array_map(function($result) {
+            $event = $result[0];
+            $totalAttendances = $result['total_attendances'];
+            $presentCount = $result['present_count'];
+            
+            $event->attendanceRate = $totalAttendances > 0 
+                ? round(($presentCount / $totalAttendances) * 100) 
+                : null;
+            
+            return $event;
+        }, $results);
+
+        return [
+            'events' => $events,
+            'totalPages' => $totalPages,
+            'currentPage' => $page
+        ];
+    }
+}

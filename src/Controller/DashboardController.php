@@ -17,6 +17,9 @@ class DashboardController extends AbstractController
         YouthRepository $youthRepository,
         AttendanceRepository $attendanceRepository
     ): Response {
+        $now = new \DateTime();
+        $thirtyDaysLater = (new \DateTime())->modify('+30 days');
+
         $statistics = [
             'totalYouths' => $youthRepository->count([]),
             'upcomingEvents' => $eventRepository->countUpcoming(),
@@ -26,6 +29,7 @@ class DashboardController extends AbstractController
         return $this->render('dashboard/index.html.twig', [
             'statistics' => $statistics,
             'upcomingEvents' => $eventRepository->findUpcoming(5),
+            'upcomingBirthdays' => $youthRepository->findUpcomingBirthdays($now, $thirtyDaysLater),
         ]);
     }
-} 
+}

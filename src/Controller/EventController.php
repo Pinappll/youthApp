@@ -17,20 +17,33 @@ use App\Entity\Youth;
 use App\Form\EventType;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use App\Repository\SectorRepository;  // Add this line
 
 #[Route('/events')]
 class EventController extends AbstractController
 {
     #[Route('/', name: 'app_event_index', methods: ['GET'])]
-    public function index(EventRepository $eventRepository): Response
+    public function index(Request $request, EventRepository $eventRepository, SectorRepository $sectorRepository, ChurchRepository $churchRepository): Response
     {
-        $user = $this->getUser();
-        $events = in_array('ROLE_ADMIN', $user->getRoles())
-            ? $eventRepository->findBy([], ['date' => 'DESC'])
-            : $eventRepository->findBy(['sector' => $user->getSector()], ['date' => 'DESC']);
+        $page = $request->query->getInt('page', 1);
+        $criteria = [
+            'search' => $request->query->get('search'),
+            'month' => $request->query->get('month'),
+            'sectors' => $request->query->all('sectors'),
+            'churches' => $request->query->all('churches')
+        ];
+
+        $result = $eventRepository->findFiltered($criteria, $page);
 
         return $this->render('event/index.html.twig', [
-            'events' => $events,
+            'events' => $result['events'],
+            'currentPage' => $result['currentPage'],
+            'totalPages' => $result['totalPages'],
+            'month' => $request->query->get('month'),
+            'sectors' => $sectorRepository->findAll(),
+            'churches' => $churchRepository->findAll(),
+            'selectedSectors' => $criteria['sectors'],
+            'selectedChurches' => $criteria['churches']
         ]);
     }
 
@@ -163,20 +176,49 @@ class EventController extends AbstractController
     #[IsGranted('edit', 'event')]
     public function edit(Request $request, Event $event, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(EventType::class, $event);
+        // Ensure scope is set
+        if (!$event->getScope()) {
+            $event->setScope('sector');
+        }
+        
+        $form = $this->createForm(EventType::class, $event, [
+            'csrf_protection' => true,
+            'csrf_field_name' => '_token',
+            'csrf_token_id'   => 'event_form'
+        ]);
+        
+        // Handle AJAX requests for scope changes
+        if ($request->isXmlHttpRequest() && $request->isMethod('POST')) {
+            $formData = $request->request->all('event');
+            if (isset($formData['scope'])) {
+                $event->setScope($formData['scope']);
+                return $this->render('event/_form_fields.html.twig', [
+                    'form' => $this->createForm(EventType::class, $event)->createView()
+                ]);
+            }
+        }
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Handle scope-specific logic
+            if ($event->getScope() !== 'church') {
+                $event->setTargetChurch(null);
+            }
+            if ($event->getScope() !== 'sector') {
+                $event->setTargetSector(null);
+            }
+            
             $event->setLastModifiedAt(new \DateTime());
             $entityManager->flush();
 
             $this->addFlash('success', 'L\'événement a été modifié avec succès.');
-            return $this->redirectToRoute('app_event_index');
+            return $this->redirectToRoute('app_event_show', ['id' => $event->getId()]);
         }
 
         return $this->render('event/edit.html.twig', [
             'event' => $event,
-            'form' => $form,
+            'form' => $form
         ]);
     }
 
@@ -297,27 +339,40 @@ class EventController extends AbstractController
     #[IsGranted('view', 'event')]
     public function export(Event $event, ChurchRepository $churchRepository): Response
     {
-        // Récupérer les données nécessaires
+        // Get churches from the event's sector
         $churches = $churchRepository->findBy(['sector' => $event->getSector()]);
         
-        // Préparer les présences
+        // Get all attendances and calculate church statistics
         $attendances = [];
+        $churchStats = [];
+        
         foreach ($event->getAttendances() as $attendance) {
             $attendances[$attendance->getYouth()->getId()] = $attendance;
+            
+            if ($attendance->getIsPresent()) {
+                $youth = $attendance->getYouth();
+                $church = $youth->getChurch();
+                $churchName = $church ? $church->getName() : 'Sans église';
+                $churchStats[$churchName] = ($churchStats[$churchName] ?? 0) + 1;
+            }
         }
 
-        // Configurer Dompdf
+        // Sort church statistics by name
+        ksort($churchStats);
+
+        // Configure Dompdf
         $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isPhpEnabled', true);
 
         $dompdf = new Dompdf($options);
 
-        // Générer le HTML
+        // Generate HTML with church statistics
         $html = $this->renderView('event/pdf/attendance_report.html.twig', [
             'event' => $event,
             'churches' => $churches,
-            'attendances' => $attendances
+            'attendances' => $attendances,
+            'churchStats' => $churchStats
         ]);
 
         // Charger le HTML dans Dompdf

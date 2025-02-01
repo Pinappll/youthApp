@@ -3,16 +3,45 @@
 {% block title %}Modifier {{ youth.firstName }} {{ youth.lastName }}{% endblock %}
 
 {% block crud_title %}
-    <div class="flex items-center space-x-4">
-        <div class="w-16 h-16 flex-shrink-0">
+    <div class="flex flex-col items-center sm:flex-row sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
+        <div class="w-24 h-24 sm:w-16 sm:h-16 flex-shrink-0">
             <img src="{{ youth.photo ? asset(youth.photo) : asset('images/userDefaultImg.jpg') }}" 
                  alt="{{ youth.firstName }} {{ youth.lastName }}"
                  class="w-full h-full rounded-full object-cover shadow-lg">
         </div>
-        <h1 class="text-3xl font-bold text-gray-900">Modifier {{ youth.firstName }} {{ youth.lastName }}</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 text-center sm:text-left">
+            Modifier {{ youth.firstName }} {{ youth.lastName }}
+        </h1>
+    </div>
+{% endblock %}
+
+{% block crud_actions %}
+    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+        <a href="{{ path('app_youth_index') }}" 
+           class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+            Retour à la liste
+        </a>
+        <a href="{{ path('app_youth_show', {'id': youth.id}) }}" 
+           class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+            Voir les détails
+        </a>
     </div>
 {% endblock %}
 
 {% block crud_content %}
-    {% include 'youth/_form.html.twig' with {'button_label': 'Mettre à jour'} %}
+    <div class="mt-6">
+        {% include 'youth/_form.html.twig' with {'button_label': 'Mettre à jour'} %}
+        
+        <div class="mt-6">
+            <form method="post" action="{{ path('app_youth_delete', {'id': youth.id}) }}" 
+                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce jeune ?');"
+                  class="flex justify-center sm:justify-end">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ youth.id) }}">
+                <button type="submit" 
+                        class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    Supprimer
+                </button>
+            </form>
+        </div>
+    </div>
 {% endblock %}

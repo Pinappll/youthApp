@@ -1,84 +1,365 @@
-{% extends 'base.html.twig' %}
+{% extends 'crud/index.html.twig' %}
 
-{% block title %}Liste des événements{% endblock %}
+{% block crud_title %}
+    <h1 class="text-2xl font-semibold text-gray-900">
+        Liste des événements
+        {% if month %}
+            <span class="text-sm text-gray-500 block">
+                {{ month|date('F Y')|trans }}
+            </span>
+        {% endif %}
+    </h1>
+{% endblock %}
 
-{% block body %}
-<div class="py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-semibold text-gray-900">Événements</h1>
-            <a href="{{ path('app_event_new') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                Créer un événement
-            </a>
+{% block crud_actions %}
+    <a href="{{ path('app_event_new') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        Nouvel événement
+    </a>
+{% endblock %}
+
+{% block crud_filters %}
+    <div class="bg-white rounded-xl shadow-sm mt-6">
+        {# Search bar and filter toggle #}
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center space-x-4">
+                <form method="GET" action="{{ path('app_event_index') }}" class="flex-1 flex items-center space-x-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" 
+                                   name="search" 
+                                   value="{{ app.request.query.get('search') }}"
+                                   placeholder="Rechercher un événement..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    {% if month %}
+                        <input type="hidden" name="month" value="{{ month }}">
+                    {% endif %}
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Rechercher
+                    </button>
+                </form>
+                <button type="button" 
+                        id="filterButton"
+                        class="flex-shrink-0 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                    </svg>
+                    Filtres
+                    {% if month %}
+                        <span class="ml-1.5 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">1</span>
+                    {% endif %}
+                </button>
+            </div>
         </div>
 
-        <div class="mt-8 flex flex-col">
-            <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                    <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+        {# Filter panel #}
+        <form method="GET" action="{{ path('app_event_index') }}" id="filterForm">
+            <div id="filterPanel" class="hidden border-t border-gray-200">
+                {% if app.request.query.get('search') %}
+                    <input type="hidden" name="search" value="{{ app.request.query.get('search') }}">
+                {% endif %}
+                <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="month" class="block text-sm font-medium text-gray-700">Période</label>
+                        <input type="month" id="month" name="month" value="{{ month }}"
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Secteurs</label>
+                        <div class="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                            {% for sector in sectors %}
+                                <div class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="sectors[]" 
+                                           value="{{ sector.id }}"
+                                           {% if sector.id in selectedSectors %}checked{% endif %}
+                                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    <label class="ml-2 text-sm text-gray-700">{{ sector.name }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Églises</label>
+                        <div class="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                            {% for church in churches %}
+                                <div class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="churches[]" 
+                                           value="{{ church.id }}"
+                                           {% if church.id in selectedChurches %}checked{% endif %}
+                                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    <label class="ml-2 text-sm text-gray-700">{{ church.name }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="px-4 py-3 bg-gray-50 text-right sm:px-6 flex justify-between">
+                    <button type="button" onclick="clearFilters()" 
+                            class="text-sm text-gray-600 hover:text-gray-900">
+                        Réinitialiser les filtres
+                    </button>
+                    <button type="submit" 
+                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Appliquer les filtres
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block crud_content %}
+    <div class="mt-6">
+        {# Desktop view #}
+        <div class="hidden sm:block">
+            <div class="shadow overflow-x-auto border-b border-gray-200 sm:rounded-lg">
+                <div class="min-w-full divide-y divide-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lieu</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portée</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Secteur</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Présence</th>
+                                <th scope="col" class="relative px-6 py-3">
+                                    <span class="sr-only">Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for event in events %}
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lieu</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portée</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Secteur</th>
-                                    <th scope="col" class="relative px-6 py-3">
-                                        <span class="sr-only">Actions</span>
-                                    </th>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ event.name }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ event.date|date('d/m/Y H:i') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ event.location }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {% set scopes = {
+                                            'general': 'Tous les jeunes',
+                                            'sector': event.targetSector ? event.targetSector.name : (event.sector ? event.sector.name : 'Secteur non spécifié'),
+                                            'church': event.targetChurch ? event.targetChurch.name : 'Église non spécifiée'
+                                        } %}
+                                        {{ event.scope ? scopes[event.scope] : 'Non défini' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ event.sector ? event.sector.name : 'Non spécifié' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {% if event.date < date() %}
+                                            {% if event.attendanceRate is not null %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ event.attendanceRate >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                    {{ event.attendanceRate }}%
+                                                </span>
+                                            {% else %}
+                                                <span class="text-gray-400">Non renseigné</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-gray-400">À venir</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-2">
+                                            <a href="{{ path('app_event_show', {'id': event.id}) }}" class="text-indigo-600 hover:text-indigo-900">Voir</a>
+                                            {% if not event.isLocked() and is_granted('edit', event) %}
+                                                <a href="{{ path('app_event_edit', {'id': event.id}) }}" class="text-yellow-600 hover:text-yellow-900">Modifier</a>
+                                                <form method="post" action="{{ path('app_event_delete', {'id': event.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" class="inline">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ event.id) }}">
+                                                    <button type="submit" class="text-red-600 hover:text-red-900">Supprimer</button>
+                                                </form>
+                                            {% endif %}
+                                            <a href="{{ path('app_event_attendance', {'id': event.id}) }}" class="text-green-600 hover:text-green-900">Présences</a>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                {% for event in events %}
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            {{ event.name }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ event.date|date('d/m/Y H:i') }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ event.location }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        Aucun événement trouvé
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {# Mobile view #}
+        <div class="sm:hidden">
+            <div class="space-y-4">
+                {% for event in events %}
+                    <div class="bg-white shadow rounded-lg overflow-hidden">
+                        <div class="p-4">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-medium text-gray-900">{{ event.name }}</h3>
+                                <div class="ml-4 flex-shrink-0">
+                                    <button type="button" class="event-details-toggle bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none">
+                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-500">
+                                {{ event.date|date('d/m/Y H:i') }}
+                            </div>
+                            <div class="event-details hidden mt-4 border-t border-gray-200 pt-4">
+                                <dl class="space-y-4">
+                                    <div>
+                                        <dt class="text-sm font-medium text-gray-500">Lieu</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">{{ event.location }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm font-medium text-gray-500">Portée</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">
                                             {% set scopes = {
                                                 'general': 'Tous les jeunes',
                                                 'sector': event.targetSector ? event.targetSector.name : (event.sector ? event.sector.name : 'Secteur non spécifié'),
                                                 'church': event.targetChurch ? event.targetChurch.name : 'Église non spécifiée'
                                             } %}
                                             {{ event.scope ? scopes[event.scope] : 'Non défini' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ event.sector ? event.sector.name : 'Non spécifié' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div class="flex justify-end space-x-2">
-                                                <a href="{{ path('app_event_show', {'id': event.id}) }}" class="text-indigo-600 hover:text-indigo-900">Voir</a>
-                                                {% if not event.isLocked() and is_granted('edit', event) %}
-                                                    <a href="{{ path('app_event_edit', {'id': event.id}) }}" class="text-yellow-600 hover:text-yellow-900">Modifier</a>
-                                                    <form method="post" action="{{ path('app_event_delete', {'id': event.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" class="inline">
-                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ event.id) }}">
-                                                        <button type="submit" class="text-red-600 hover:text-red-900">Supprimer</button>
-                                                    </form>
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm font-medium text-gray-500">Secteur</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">{{ event.sector ? event.sector.name : 'Non spécifié' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm font-medium text-gray-500">Présence</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">
+                                            {% if event.date < date() %}
+                                                {% if event.attendanceRate is not null %}
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ event.attendanceRate >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                        {{ event.attendanceRate }}%
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-gray-400">Non renseigné</span>
                                                 {% endif %}
-                                                <a href="{{ path('app_event_attendance', {'id': event.id}) }}" class="text-green-600 hover:text-green-900">Présences</a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                {% else %}
-                                    <tr>
-                                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                            Aucun événement trouvé
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                            {% else %}
+                                                <span class="text-gray-400">À venir</span>
+                                            {% endif %}
+                                        </dd>
+                                    </div>
+                                </dl>
+                                <div class="mt-4 flex justify-end space-x-3 border-t border-gray-200 pt-4">
+                                    <a href="{{ path('app_event_show', {'id': event.id}) }}" class="text-indigo-600 hover:text-indigo-900">Voir</a>
+                                    {% if not event.isLocked() and is_granted('edit', event) %}
+                                        <a href="{{ path('app_event_edit', {'id': event.id}) }}" class="text-yellow-600 hover:text-yellow-900">Modifier</a>
+                                    {% endif %}
+                                    <a href="{{ path('app_event_attendance', {'id': event.id}) }}" class="text-green-600 hover:text-green-900">Présences</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                {% else %}
+                    <div class="text-center text-gray-500 py-4">
+                        Aucun événement trouvé
+                    </div>
+                {% endfor %}
             </div>
         </div>
     </div>
-</div>
+
+    {# Pagination with youth page style #}
+    <div class="mt-8 px-4 sm:px-0">
+        <nav aria-label="Page navigation" class="flex justify-center">
+            <ul class="inline-flex flex-wrap justify-center gap-2">
+                {% if currentPage > 1 %}
+                    <li>
+                        <a href="{{ path('app_event_index', {
+                            'page': currentPage - 1,
+                            'month': month,
+                            'search': app.request.query.get('search')
+                        }) }}" 
+                           class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                            Précédent
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% set pages = max(1, totalPages) %}
+                {% for i in 1..pages %}
+                    <li>
+                        <a href="{{ path('app_event_index', {
+                            'page': i,
+                            'month': month,
+                            'search': app.request.query.get('search')
+                        }) }}" 
+                           class="px-4 py-2 border {% if i == currentPage %}bg-indigo-600 border-indigo-600 text-white{% else %}border-gray-300 text-gray-700 hover:bg-gray-50{% endif %} rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                            {{ i }}
+                        </a>
+                    </li>
+                {% endfor %}
+                
+                {% if currentPage < totalPages %}
+                    <li>
+                        <a href="{{ path('app_event_index', {
+                            'page': currentPage + 1,
+                            'month': month,
+                            'search': app.request.query.get('search')
+                        }) }}" 
+                           class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                            Suivant
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+{% endblock %}
+
+{% block crud_javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButton = document.getElementById('filterButton');
+    const filterPanel = document.getElementById('filterPanel');
+    
+    // Show filter panel if filter is active
+    if ('{{ month }}') {
+        filterPanel.classList.remove('hidden');
+    }
+
+    filterButton.addEventListener('click', function() {
+        filterPanel.classList.toggle('hidden');
+    });
+
+    // Add toggle functionality for mobile event details
+    document.querySelectorAll('.event-details-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const details = this.closest('.p-4').querySelector('.event-details');
+            details.classList.toggle('hidden');
+            
+            // Rotate arrow icon
+            const svg = this.querySelector('svg');
+            svg.style.transform = details.classList.contains('hidden') ? '' : 'rotate(180deg)';
+        });
+    });
+});
+
+function clearFilters() {
+    const form = document.getElementById('filterForm');
+    form.querySelector('#month').value = '';
+    form.submit();
+}
+</script>
 {% endblock %}

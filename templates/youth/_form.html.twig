@@ -1,32 +1,30 @@
 <div class="space-y-8">
     {{ form_start(form, {'attr': {'class': 'space-y-8'}}) }}
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="bg-white shadow sm:rounded-lg">
             <div class="px-4 py-5 sm:p-6">
-                <div class="grid grid-cols-1 gap-6">
-                    {# Photo Preview #}
-                    <div class="col-span-1">
-                        <div class="flex items-center space-x-6">
-                            <div class="w-32 h-32">
-                                <img id="photo-preview" 
-                                     src="{{ youth.photo ? asset('uploads/youth/' ~ youth.photo) : asset('images/userDefaultImg.jpg') }}"
-                                     alt="Photo preview"
-                                     class="w-full h-full rounded-lg object-cover">
-                            </div>
-                            <div class="flex-1">
-                                {{ form_label(form.photoFile, 'Photo', {'label_attr': {'class': 'block text-sm font-medium text-gray-700'}}) }}
-                                {{ form_widget(form.photoFile, {
-                                    'attr': {
-                                        'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md',
-                                        'onchange': 'previewPhoto(this)'
-                                    }
-                                }) }}
-                                {{ form_errors(form.photoFile) }}
-                            </div>
+                <div class="space-y-6">
+                    {# Mobile-optimized photo preview #}
+                    <div class="flex flex-col items-center sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
+                        <div class="w-40 h-40 sm:w-32 sm:h-32">
+                            <img id="photo-preview" 
+                                 src="{{ youth.photo ? asset('uploads/youth/' ~ youth.photo) : asset('images/userDefaultImg.jpg') }}"
+                                 alt="Photo preview"
+                                 class="w-full h-full rounded-lg object-cover">
+                        </div>
+                        <div class="w-full sm:flex-1">
+                            {{ form_label(form.photoFile, 'Photo', {'label_attr': {'class': 'block text-sm font-medium text-gray-700'}}) }}
+                            {{ form_widget(form.photoFile, {
+                                'attr': {
+                                    'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md',
+                                    'onchange': 'previewPhoto(this)'
+                                }
+                            }) }}
+                            {{ form_errors(form.photoFile) }}
                         </div>
                     </div>
 
-                    {# Other Fields #}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {# Mobile-optimized form fields #}
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                         <div>
                             {{ form_label(form.firstName, 'Prénom', {'label_attr': {'class': 'block text-sm font-medium text-gray-700'}}) }}
                             {{ form_widget(form.firstName, {'attr': {'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'}}) }}
@@ -61,11 +59,14 @@
             </div>
         </div>
 
-        <div class="flex justify-end space-x-4">
-            <a href="{{ path('app_youth_index') }}" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+        {# Mobile-optimized buttons #}
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:space-x-4">
+            <a href="{{ path('app_youth_index') }}" 
+               class="w-full sm:w-auto text-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                 Annuler
             </a>
-            <button type="submit" class="px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+            <button type="submit" 
+                    class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
                 {{ button_label|default('Enregistrer') }}
             </button>
         </div>

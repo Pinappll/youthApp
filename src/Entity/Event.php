@@ -46,7 +46,7 @@ class Event
     private ?User $createdBy = null;
 
     #[ORM\Column(length: 20)]
-    private ?string $scope = self::SCOPE_GENERAL;
+    private ?string $scope = 'sector';
 
     #[ORM\ManyToOne]
     private ?Sector $targetSector = null;
@@ -181,12 +181,12 @@ class Event
 
     public function getScope(): ?string
     {
-        return $this->scope;
+        return $this->scope ?? 'sector';
     }
 
-    public function setScope(string $scope): static
+    public function setScope(?string $scope): static
     {
-        $this->scope = $scope;
+        $this->scope = $scope ?? 'sector';
         return $this;
     }
 

@@ -6,6 +6,7 @@ use App\Entity\Youth;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+
 /**
  * @extends ServiceEntityRepository<Youth>
  *
@@ -129,5 +130,39 @@ class YouthRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function findUpcomingBirthdays(\DateTime $from, \DateTime $to): array
+    {
+        // Get all youths with birthdays
+        $qb = $this->createQueryBuilder('y')
+            ->where('y.birthDate IS NOT NULL')
+            ->orderBy('y.birthDate', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        // Filter in PHP for upcoming birthdays
+        $upcomingBirthdays = array_filter($qb, function(Youth $youth) use ($from, $to) {
+            $birthday = $youth->getBirthDate();
+            if (!$birthday) {
+                return false;
+            }
+
+            // Create dates for comparison using only month and day
+            $birthdayDate = \DateTime::createFromFormat('!m-d', $birthday->format('m-d'));
+            $fromDate = \DateTime::createFromFormat('!m-d', $from->format('m-d'));
+            $toDate = \DateTime::createFromFormat('!m-d', $to->format('m-d'));
+
+            return $birthdayDate >= $fromDate && $birthdayDate <= $toDate;
+        });
+
+        // Sort by month and day
+        usort($upcomingBirthdays, function(Youth $a, Youth $b) {
+            $dateA = $a->getBirthDate()->format('md');
+            $dateB = $b->getBirthDate()->format('md');
+            return $dateA <=> $dateB;
+        });
+
+        return array_values($upcomingBirthdays);
     }
 }

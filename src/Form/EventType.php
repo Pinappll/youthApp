@@ -34,69 +34,78 @@ class EventType extends AbstractType
                 'attr' => ['class' => 'form-input rounded-md shadow-sm mt-1 block w-full']
             ])
             ->add('scope', ChoiceType::class, [
-                'label' => 'Portée',
                 'choices' => [
-                    'Général (tous les jeunes)' => Event::SCOPE_GENERAL,
-                    'Par secteur' => Event::SCOPE_SECTOR,
-                    'Par église' => Event::SCOPE_CHURCH
+                    'Secteur' => 'sector',
+                    'Église' => 'church',
+                    'Général' => 'general',
                 ],
-                'data' => Event::SCOPE_GENERAL,
-                'attr' => [
-                    'class' => 'form-select rounded-md shadow-sm mt-1 block w-full'
-                ]
+                'required' => true,
+                'placeholder' => false,
+                'data' => $builder->getData()->getScope() ?? 'sector',
             ])
             ->add('date', DateTimeType::class, [
                 'label' => 'Date et heure',
                 'widget' => 'single_text',
+                'required' => true,
                 'attr' => ['class' => 'form-input rounded-md shadow-sm mt-1 block w-full']
             ])
             ->add('location', TextType::class, [
                 'label' => 'Lieu',
+                'required' => true,
                 'attr' => ['class' => 'form-input rounded-md shadow-sm mt-1 block w-full']
             ]);
 
-        // Add dynamic target selector based on scope
-        $formModifier = function (FormInterface $form, ?string $scope = null, ?Event $event = null) {
-            if ($scope === Event::SCOPE_SECTOR) {
-                $form->add('targetSector', EntityType::class, [
-                    'class' => Sector::class,
-                    'choice_label' => 'name',
-                    'placeholder' => 'Sélectionnez un secteur',
-                    'label' => 'Secteur cible',
-                    'required' => true,
-                    'attr' => ['class' => 'form-select rounded-md shadow-sm mt-1 block w-full']
-                ]);
-            } elseif ($scope === Event::SCOPE_CHURCH) {
-                $form->add('targetChurch', EntityType::class, [
-                    'class' => Church::class,
-                    'choice_label' => 'name',
-                    'placeholder' => 'Sélectionnez une église',
-                    'label' => 'Église cible',
-                    'required' => true,
-                    'group_by' => function($church) {
-                        return $church->getSector()->getName();
-                    },
-                    'attr' => ['class' => 'form-select rounded-md shadow-sm mt-1 block w-full']
-                ]);
-            }
-        };
-
-        // Add form event listeners
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) use ($formModifier) {
+        // Add form event listeners for dynamic fields
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
             $data = $event->getData();
-            $formModifier($event->getForm(), $data?->getScope(), $data);
+            $form = $event->getForm();
+            
+            if ($data && $data->getScope()) {
+                $this->addScopeSpecificFields($form, $data->getScope());
+            }
         });
 
-        $builder->get('scope')->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event) use ($formModifier) {
+        $builder->get('scope')->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event) {
+            $form = $event->getForm()->getParent();
             $scope = $event->getForm()->getData();
-            $formModifier($event->getForm()->getParent(), $scope);
+            
+            if ($form) {
+                $this->addScopeSpecificFields($form, $scope);
+            }
         });
+    }
+
+    private function addScopeSpecificFields(FormInterface $form, ?string $scope): void
+    {
+        if ($scope === 'sector') {
+            $form->add('targetSector', EntityType::class, [
+                'class' => Sector::class,
+                'choice_label' => 'name',
+                'label' => 'Secteur cible',
+                'required' => true,
+                'attr' => ['class' => 'form-select rounded-md shadow-sm mt-1 block w-full']
+            ]);
+        } elseif ($scope === 'church') {
+            $form->add('targetChurch', EntityType::class, [
+                'class' => Church::class,
+                'choice_label' => 'name',
+                'label' => 'Église cible',
+                'required' => true,
+                'group_by' => function($church) {
+                    return $church->getSector()->getName();
+                },
+                'attr' => ['class' => 'form-select rounded-md shadow-sm mt-1 block w-full']
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => Event::class,
+            'csrf_protection' => true,
+            'csrf_field_name' => '_token',
+            'csrf_token_id'   => 'event_form'
         ]);
     }
 }

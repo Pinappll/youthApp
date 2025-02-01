@@ -5,11 +5,100 @@
         <title>{% block title %}Welcome!{% endblock %}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
         <link href="{{ asset('styles/app.css') }}" rel="stylesheet">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         {% block stylesheets %}{% endblock %}
         {% block javascripts %}{% endblock %}
     </head>
     <body class="h-screen flex overflow-hidden bg-gray-100">
-        <!-- Sidebar -->
+        <!-- Off-canvas menu for mobile -->
+        <div class="fixed inset-0 flex z-40 md:hidden" id="mobileMenu" style="display: none;">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-gray-600 bg-opacity-75" id="backdrop"></div>
+
+            <!-- Sidebar -->
+            <div class="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-indigo-800" id="mobileSidebar">
+                <!-- Close button -->
+                <div class="absolute top-0 right-0 -mr-12 pt-2">
+                    <button type="button" class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" id="closeMobileMenu">
+                        <span class="sr-only">Close sidebar</span>
+                        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Mobile sidebar content -->
+                <div class="flex items-center h-16 flex-shrink-0 px-4 bg-indigo-700">
+                    <span class="text-white text-xl font-semibold">Gestion Jeunes</span>
+                </div>
+                <div class="flex-1 flex flex-col overflow-y-auto">
+                    <nav class="flex-1 px-2 py-4 space-y-1">
+                        {% if is_granted('ROLE_USER') %}
+                            <a href="{{ path('app_dashboard') }}" class="{{ app.request.get('_route') == 'app_dashboard' ? 'bg-indigo-900' : 'hover:bg-indigo-600' }} text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                <svg class="mr-3 flex-shrink-0 h-6 w-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                </svg>
+                                Tableau de bord
+                            </a>
+
+                            <a href="{{ path('app_event_index') }}" class="{{ app.request.get('_route') starts with 'app_event' ? 'bg-indigo-900' : 'hover:bg-indigo-600' }} text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                <svg class="mr-3 flex-shrink-0 h-6 w-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Événements
+                            </a>
+
+                            <a href="{{ path('app_youth_index') }}" class="{{ app.request.get('_route') starts with 'app_youth' ? 'bg-indigo-900' : 'hover:bg-indigo-600' }} text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                <svg class="mr-3 flex-shrink-0 h-6 w-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                Jeunes
+                            </a>
+
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <a href="{{ path('app_church_index') }}" class="{{ app.request.get('_route') starts with 'app_church' ? 'bg-indigo-900' : 'hover:bg-indigo-600' }} text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <svg class="mr-3 flex-shrink-0 h-6 w-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    Églises
+                                </a>
+
+                                <a href="{{ path('app_sector_index') }}" class="{{ app.request.get('_route') starts with 'app_sector' ? 'bg-indigo-900' : 'hover:bg-indigo-600' }} text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <svg class="mr-3 flex-shrink-0 h-6 w-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Secteurs
+                                </a>
+
+                                <a href="{{ path('app_user_index') }}" class="{{ app.request.get('_route') starts with 'app_user' ? 'bg-indigo-900' : 'hover:bg-indigo-600' }} text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <svg class="mr-3 flex-shrink-0 h-6 w-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    Utilisateurs
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </nav>
+                </div>
+                {% if app.user %}
+                    <div class="flex-shrink-0 flex border-t border-indigo-700 p-4 bg-indigo-800">
+                        <div class="flex items-center">
+                            <div>
+                                <div class="text-base font-medium text-white">{{ app.user.firstName }} {{ app.user.lastName }}</div>
+                                <div class="text-sm font-medium text-indigo-300">{{ app.user.email }}</div>
+                            </div>
+                            <a href="{{ path('app_logout') }}" class="ml-auto flex-shrink-0 bg-indigo-700 p-1 rounded-full text-indigo-300 hover:text-white">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Static sidebar for desktop -->
         <div class="hidden md:flex md:flex-shrink-0">
             <div class="flex flex-col w-64">
                 <div class="flex flex-col h-0 flex-1">
@@ -86,6 +175,16 @@
 
         <!-- Main content -->
         <div class="flex flex-col w-0 flex-1 overflow-hidden">
+            <!-- Mobile menu button -->
+            <div class="md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3">
+                <button type="button" class="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" id="openMobileMenu">
+                    <span class="sr-only">Open sidebar</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+
             <main class="flex-1 relative overflow-y-auto focus:outline-none">
                 {% for message in app.flashes('success') %}
                     <div class="rounded-md bg-green-50 p-4 m-4">
@@ -120,5 +219,51 @@
                 {% block body %}{% endblock %}
             </main>
         </div>
+
+        {% block javascript_footer %}
+            <script>
+                // Mobile menu functionality
+                document.addEventListener('DOMContentLoaded', function() {
+                    initializeMobileMenu();
+                    initializeFilterPanel();
+                });
+
+                function initializeMobileMenu() {
+                    const mobileMenu = document.getElementById('mobileMenu');
+                    const backdrop = document.getElementById('backdrop');
+                    const openButton = document.getElementById('openMobileMenu');
+                    const closeButton = document.getElementById('closeMobileMenu');
+                    
+                    if (!mobileMenu || !openButton || !closeButton || !backdrop) return;
+
+                    function openMenu(e) {
+                        e.preventDefault();
+                        mobileMenu.style.display = 'flex';
+                        document.body.style.overflow = 'hidden';
+                    }
+
+                    function closeMenu(e) {
+                        e.preventDefault();
+                        mobileMenu.style.display = 'none';
+                        document.body.style.overflow = '';
+                    }
+
+                    openButton.addEventListener('click', openMenu);
+                    closeButton.addEventListener('click', closeMenu);
+                    backdrop.addEventListener('click', closeMenu);
+                }
+
+                function initializeFilterPanel() {
+                    const filterPanel = document.getElementById('filterPanel');
+                    if (filterPanel) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.has('month') || urlParams.has('presence')) {
+                            filterPanel.classList.remove('hidden');
+                        }
+                    }
+                }
+            </script>
+            {% block javascripts_inline %}{% endblock %}
+        {% endblock %}
     </body>
 </html>

@@ -18,15 +18,25 @@
         </div>
 
         <div class="mt-8">
-            {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+            {{ form_start(form, {
+                'attr': {'class': 'space-y-6'},
+                'method': 'POST'
+            }) }}
+                {{ form_widget(form._token) }}
                 <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
                     <div class="grid grid-cols-1 gap-6">
                         {{ form_row(form.name) }}
+                        {{ form_row(form.scope, {'attr': {'class': 'form-select rounded-md shadow-sm mt-1 block w-full', 'onchange': 'submitScope(event)'}}) }}
+                        <div id="dynamic-fields">
+                            {% if form.targetSector is defined %}
+                                {{ form_row(form.targetSector) }}
+                            {% endif %}
+                            {% if form.targetChurch is defined %}
+                                {{ form_row(form.targetChurch) }}
+                            {% endif %}
+                        </div>
                         {{ form_row(form.date) }}
                         {{ form_row(form.location) }}
-                        {% if form.sector is defined %}
-                            {{ form_row(form.sector) }}
-                        {% endif %}
                     </div>
                 </div>
 
@@ -40,11 +50,92 @@
                         </form>
                     {% endif %}
                     <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Enregistrer
+                        Enregistrer les modifications
                     </button>
                 </div>
             {{ form_end(form) }}
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    let currentScope = form.querySelector('[name="event[scope]"]')?.value || 'general';
+    
+    function saveFormState() {
+        const data = {};
+        const formData = new FormData(form);
+        for (const [key, value] of formData.entries()) {
+            if (!key.includes('scope') && !key.includes('targetSector') && !key.includes('targetChurch')) {
+                data[key] = value;
+            }
+        }
+        return data;
+    }
+
+    function restoreFormState(savedData) {
+        for (const [key, value] of Object.entries(savedData)) {
+            const input = form.querySelector(`[name="${key}"]`);
+            if (input) {
+                input.value = value;
+            }
+        }
+    }
+
+    async function updateForm(scope) {
+        const savedData = saveFormState();
+        const formData = new FormData();
+        formData.append('event[scope]', scope);
+
+        try {
+            const response = await fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Update dynamic fields container
+            const targetFields = form.querySelector('#dynamic-fields');
+            const newTargetFields = doc.querySelector('#dynamic-fields');
+            
+            if (targetFields) {
+                if (scope === 'general') {
+                    targetFields.innerHTML = ''; // Clear fields for general scope
+                } else if (newTargetFields) {
+                    targetFields.innerHTML = newTargetFields.innerHTML;
+                }
+            }
+
+            // Restore saved form data
+            restoreFormState(savedData);
+            
+            // Update current scope
+            currentScope = scope;
+            
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    // Handle scope changes
+    form.addEventListener('change', function(e) {
+        if (e.target.name === 'event[scope]') {
+            const newScope = e.target.value;
+            if (newScope !== currentScope) {
+                updateForm(newScope);
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

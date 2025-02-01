@@ -4,33 +4,71 @@
     <meta charset="UTF-8">
     <title>Rapport de présence - {{ event.name }}</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        h1 { text-align: center; color: #333; }
-        .event-info { margin-bottom: 20px; }
+        body { 
+            font-family: Arial, sans-serif;
+            font-size: 11px; 
+        }
+        h1 { 
+            text-align: center; 
+            color: #333;
+            font-size: 18px;
+        }
+        h2 { font-size: 16px; }
+        h3 { font-size: 14px; }
+        .event-info { 
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
         .church-name { 
             background: #f3f4f6;
-            padding: 10px;
-            margin-top: 20px;
+            padding: 8px;
+            margin-top: 16px;
             font-weight: bold;
+            font-size: 13px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            table-layout: fixed;
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 6px;
             text-align: left;
+            font-size: 10px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
-        th { background: #f9fafb; }
+        th { 
+            background: #f9fafb;
+            font-size: 10px;
+        }
         .present { color: green; }
         .absent { color: red; }
         .footer {
             text-align: center;
-            margin-top: 30px;
-            font-size: 12px;
+            margin-top: 24px;
+            font-size: 10px;
             color: #666;
+        }
+        .stats-section {
+            margin-top: 30px;
+            page-break-inside: avoid;
+            border-top: 2px solid #e5e7eb;
+            padding-top: 16px;
+        }
+        .stats-table {
+            width: 100%;
+            margin-top: 8px;
+        }
+        .stats-table th {
+            width: 70%;
+        }
+        .stats-table td {
+            width: 30%;
+            text-align: right;
         }
     </style>
 </head>
@@ -47,6 +85,12 @@
     {% for church in churches %}
         <div class="church-name">{{ church.name }}</div>
         <table>
+            <colgroup>
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 15%;">
+                <col style="width: 35%;">
+            </colgroup>
             <thead>
                 <tr>
                     <th>Nom</th>
@@ -71,8 +115,76 @@
         </table>
     {% endfor %}
 
+    {# Section for external attendees #}
+    {% set external_attendees = [] %}
+    {% for attendance in attendances|filter(a => a.isPresent) %}
+        {% set youth = attendance.youth %}
+        {% if youth.church not in churches and youth.church is not null %}
+            {% set external_attendees = external_attendees|merge([{
+                'youth': youth,
+                'attendance': attendance,
+                'church': youth.church
+            }]) %}
+        {% endif %}
+    {% endfor %}
+
+    {% if external_attendees is not empty %}
+        <div class="church-name" style="background: #e5edff;">Participants d'autres églises</div>
+        <table>
+            <colgroup>
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Église d'origine</th>
+                    <th>Commentaire</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in external_attendees|sort((a, b) => a.church.name <=> b.church.name) %}
+                    <tr>
+                        <td>{{ entry.youth.lastName }}</td>
+                        <td>{{ entry.youth.firstName }}</td>
+                        <td>{{ entry.church.name }}</td>
+                        <td>{{ entry.attendance.comment }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# Statistics Section - Moved to bottom #}
+    <div class="stats-section">
+        <h3>Statistiques de participation</h3>
+        {% set totalPresent = attendances|filter(a => a.isPresent)|length %}
+        {% set totalYouths = attendances|length %}
+        
+        <table class="stats-table">
+            <tr>
+                <th>Participation totale</th>
+                <td>{{ totalPresent }} / {{ totalYouths }} ({{ totalYouths > 0 ? ((totalPresent / totalYouths) * 100)|round : 0 }}%)</td>
+            </tr>
+            {% if churchStats|length > 0 %}
+                <tr>
+                    <th colspan="2" style="text-align: left; padding-top: 12px;">Répartition par église</th>
+                </tr>
+                {% for churchName, count in churchStats %}
+                    <tr>
+                        <th>{{ churchName }}</th>
+                        <td>{{ count }}</td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </table>
+    </div>
+
     <div class="footer">
         <p>Généré le {{ "now"|date('d/m/Y H:i') }}</p>
     </div>
 </body>
-</html> 
+</html>
