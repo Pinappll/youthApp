@@ -7,12 +7,12 @@
     <h1 class="text-2xl font-semibold text-gray-900">
         Présences - {{ event.name }}
         <span class="text-sm text-gray-500 block">
-            {% set scopes = {
-                'general': 'Tous les jeunes',
-                'sector': 'Jeunes du secteur ' ~ (event.targetSector ? event.targetSector.name : (event.sector ? event.sector.name : 'Non défini')),
-                'church': event.targetChurch ? 'Jeunes de ' ~ event.targetChurch.name : 'Église non spécifiée'
+            {% set scope_display = {
+                'general': 'Portée générale',
+                'sector': event.targetSector ? 'Secteur : ' ~ event.targetSector.name : (event.sector ? 'Secteur : ' ~ event.sector.name : 'Secteur non spécifié'),
+                'church': event.targetChurch ? 'Église : ' ~ event.targetChurch.name : 'Église non spécifiée'
             } %}
-            {{ event.scope ? scopes[event.scope] : 'Portée non définie' }}
+            {{ scope_display[event.scope]|default('Non définie') }}
         </span>
     </h1>
 </div>
@@ -68,60 +68,44 @@
     </div>
 
     <form method="post" class="space-y-8">
-        {# Additional Youths Section - Hidden for general scope #}
-        {% if event.scope != 'general' %}
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Ajouter des jeunes supplémentaires</h3>
-                    <p class="mt-1 text-sm text-gray-500">Sélectionnez des jeunes à ajouter à cet événement, même s'ils ne font pas partie de la portée définie.</p>
-                </div>
-                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
-                    {% set grouped_youths = {} %}
-                    {% for church in all_churches %}
-                        {% if church.sector.id != event.sector.id %}
-                            {% set church_youths = [] %}
-                            {% for youth in church.youths %}
-                                {% if youth.id not in scope_youth_ids %}
-                                    {% set church_youths = church_youths|merge([youth]) %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if church_youths|length > 0 %}
-                                {% set grouped_youths = grouped_youths|merge({(church.id): {
-                                    'name': church.name,
-                                    'youths': church_youths|sort((a, b) => a.lastName <=> b.lastName)
-                                }}) %}
-                            {% endif %}
-                        {% endif %}
-                    {% endfor %}
-
-                    {% if grouped_youths|length > 0 %}
-                        <div class="space-y-6">
-                            {% for church_data in grouped_youths %}
-                                <div>
-                                    <h4 class="font-medium text-gray-700 mb-2">{{ church_data.name }}</h4>
-                                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-                                        {% for youth in church_data.youths %}
-                                            <div class="flex items-center">
-                                                <input type="checkbox" 
-                                                       name="additional_youths[]" 
-                                                       value="{{ youth.id }}"
-                                                       {% if youth.id in attendances|keys %}checked{% endif %}
-                                                       class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                                <label class="ml-2 text-sm text-gray-700">
-                                                    {{ youth.lastName }} {{ youth.firstName }}
-                                                </label>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-gray-500 text-sm">Aucun jeune supplémentaire disponible.</p>
-                    {% endif %}
-                </div>
+        {# Additional Youths Section #}
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Ajouter des jeunes supplémentaires</h3>
+                <p class="mt-1 text-sm text-gray-500">Sélectionnez des jeunes à ajouter à cet événement.</p>
             </div>
-        {% endif %}
+            <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                {% if grouped_youths|length > 0 %}
+                    <div class="space-y-8">
+                        {% for sector_id, sector in grouped_youths %}
+                            <div class="space-y-4">
+                                <h4 class="font-medium text-lg text-gray-900">{{ sector.name }}</h4>
+                                {% for church_id, church in sector.churches %}
+                                    <div class="ml-4 space-y-2">
+                                        <h5 class="font-medium text-gray-700">{{ church.name }}</h5>
+                                        <div class="ml-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+                                            {% for youth in church.youths %}
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           name="additional_youths[]" 
+                                                           value="{{ youth.id }}"
+                                                           class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                                    <label class="ml-2 text-sm text-gray-700">
+                                                        {{ youth.lastName }} {{ youth.firstName }}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 text-sm">Aucun jeune supplémentaire disponible.</p>
+                {% endif %}
+            </div>
+        </div>
 
         {% for church in churches %}
             {% if church %}

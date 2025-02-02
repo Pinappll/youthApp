@@ -37,6 +37,7 @@ class Event
     private ?\DateTimeInterface $lastModifiedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'events')]
+    #[ORM\JoinColumn(nullable: true)]  // Changed to allow null for general scope
     private ?Sector $sector = null;
 
     #[ORM\OneToMany(mappedBy: 'event', targetEntity: Attendance::class, orphanRemoval: true)]

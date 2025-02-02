@@ -120,5 +120,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function updateScopeFields(scope) {
+    const sectorTargetField = document.getElementById('sectorTargetField');
+    const churchTargetField = document.getElementById('churchTargetField');
+    const organizerSectorField = document.getElementById('organizerSectorField');
+
+    // Hide all fields first
+    sectorTargetField.style.display = 'none';
+    churchTargetField.style.display = 'none';
+    organizerSectorField.style.display = 'none';
+
+    // Show relevant fields based on scope
+    switch(scope) {
+        case 'general':
+            break;
+        case 'sector':
+            sectorTargetField.style.display = 'block';
+            organizerSectorField.style.display = 'block';
+            break;
+        case 'church':
+            churchTargetField.style.display = 'block';
+            organizerSectorField.style.display = 'block';
+            break;
+    }
+
+    // Trigger field initialization on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const scopeSelect = document.querySelector('[data-scope-target="select"]');
+        if (scopeSelect) {
+            updateScopeFields(scopeSelect.value);
+        }
+    });
+}
 </script>
 {% endblock %}

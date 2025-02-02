@@ -63,10 +63,17 @@ class EventRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('e')
             ->leftJoin('e.sector', 's')
             ->leftJoin('e.targetChurch', 'tc')
+            ->leftJoin('e.targetSector', 'ts')
             ->leftJoin('e.attendances', 'a')
+            ->addSelect('s')
+            ->addSelect('tc')
+            ->addSelect('ts')
             ->addSelect('COUNT(DISTINCT a.id) as total_attendances')
             ->addSelect('SUM(CASE WHEN a.isPresent = true THEN 1 ELSE 0 END) as present_count')
             ->groupBy('e.id')
+            ->addGroupBy('s.id')
+            ->addGroupBy('tc.id')
+            ->addGroupBy('ts.id')
             ->orderBy('e.date', 'DESC');
 
         if (!empty($criteria['search'])) {

@@ -79,7 +79,15 @@
         <h2>{{ event.name }}</h2>
         <p>Date : {{ event.date|date('d/m/Y H:i') }}</p>
         <p>Lieu : {{ event.location }}</p>
-        <p>Secteur : {{ event.sector.name }}</p>
+        {% if event.scope != 'general' and event.sector %}
+            <p>Secteur : {{ event.sector.name }}</p>
+        {% endif %}
+        <p>Type : {% set scope_types = {
+            'general': 'Portée générale',
+            'sector': 'Secteur',
+            'church': 'Église'
+        } %}
+        {{ scope_types[event.scope]|default('Non définie') }}</p>
     </div>
 
     {% for church in churches %}

@@ -58,6 +58,10 @@ class EventController extends AbstractController
             $formData = $request->request->all('event');
             if (isset($formData['scope'])) {
                 $event->setScope($formData['scope']);
+                // Clear sector if scope is general
+                if ($formData['scope'] === 'general') {
+                    $event->setSector(null);
+                }
                 $form = $this->createForm(EventType::class, $event);
                 
                 return $this->render('event/_form_fields.html.twig', [
@@ -76,9 +80,15 @@ class EventController extends AbstractController
                     $event->setScope('sector');
                 }
 
-                // Clear targetChurch if scope is not 'church'
+                // Handle scope-specific logic
+                if ($event->getScope() === 'general') {
+                    $event->setSector(null);
+                }
                 if ($event->getScope() !== 'church') {
                     $event->setTargetChurch(null);
+                }
+                if ($event->getScope() !== 'sector') {
+                    $event->setTargetSector(null);
                 }
 
                 $entityManager->persist($event);
@@ -126,19 +136,28 @@ class EventController extends AbstractController
         $qb = $entityManager->createQueryBuilder()
             ->select('y')
             ->from(Youth::class, 'y')
-            ->join('y.church', 'c');
+            ->join('y.church', 'c')
+            ->orderBy('y.lastName', 'ASC')
+            ->addOrderBy('y.firstName', 'ASC');
 
         switch ($event->getScope()) {
             case 'church':
-                $qb->where('c = :church')
-                   ->setParameter('church', $event->getTargetChurch());
+                if ($event->getTargetChurch()) {
+                    $qb->where('c = :church')
+                       ->setParameter('church', $event->getTargetChurch());
+                }
                 break;
             case 'sector':
-                $qb->where('c.sector = :sector')
-                   ->setParameter('sector', $event->getSector());
+                if ($event->getTargetSector()) {
+                    $qb->where('c.sector = :sector')
+                       ->setParameter('sector', $event->getTargetSector());
+                } elseif ($event->getSector()) {
+                    $qb->where('c.sector = :sector')
+                       ->setParameter('sector', $event->getSector());
+                }
                 break;
-            case 'all':
-                // No additional conditions needed
+            case 'general':
+                // No conditions needed - get all youths
                 break;
         }
 
@@ -150,14 +169,34 @@ class EventController extends AbstractController
         $qb = $entityManager->createQueryBuilder()
             ->select('y')
             ->from(Youth::class, 'y')
-            ->join('y.church', 'c');
+            ->join('y.church', 'c')
+            ->orderBy('y.lastName', 'ASC')
+            ->addOrderBy('y.firstName', 'ASC');
 
-        if ($event->getScope() === 'church') {
-            $qb->where('c = :church')
-               ->setParameter('church', $event->getTargetChurch());
-        } elseif ($event->getScope() === 'sector') {
-            $qb->where('c.sector = :sector')
-               ->setParameter('sector', $event->getSector());
+        switch ($event->getScope()) {
+            case 'church':
+                if ($event->getTargetChurch()) {
+                    $qb->where('c = :church')
+                       ->setParameter('church', $event->getTargetChurch());
+                }
+                break;
+            case 'sector':
+                if ($event->getTargetSector()) {
+                    $qb->where('c.sector = :sector')
+                       ->setParameter('sector', $event->getTargetSector());
+                } elseif ($event->getSector()) {
+                    $qb->where('c.sector = :sector')
+                       ->setParameter('sector', $event->getSector());
+                }
+                break;
+            case 'general':
+                // No conditions needed - get all youths
+                break;
+            default:
+                if ($event->getSector()) {
+                    $qb->where('c.sector = :sector')
+                       ->setParameter('sector', $event->getSector());
+                }
         }
 
         return $qb->getQuery()->getResult();
@@ -202,6 +241,9 @@ class EventController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             // Handle scope-specific logic
+            if ($event->getScope() === 'general') {
+                $event->setSector(null);
+            }
             if ($event->getScope() !== 'church') {
                 $event->setTargetChurch(null);
             }
@@ -244,23 +286,31 @@ class EventController extends AbstractController
         ChurchRepository $churchRepository
     ): Response {
         $user = $this->getUser();
-        $sector = $event->getSector();
         
-        // Get all churches for the additional youths selector
-        $all_churches = $churchRepository->findAll();
-        
-        // Get target churches based on event scope and filter out nulls
-        $churches = match($event->getScope() ?? 'sector') {
+        // Get churches based on event scope
+        $targetChurches = match($event->getScope()) {
             'church' => $event->getTargetChurch() ? [$event->getTargetChurch()] : [],
-            'sector' => $churchRepository->findBy(['sector' => $sector]),
-            'all' => $all_churches,
-            default => $churchRepository->findBy(['sector' => $sector]),
+            'sector' => $event->getTargetSector() 
+                ? $churchRepository->findBy(['sector' => $event->getTargetSector()])
+                : $churchRepository->findBy(['sector' => $event->getSector()]),
+            'general' => $churchRepository->findAll(),
+            default => []
         };
 
-        // Filter out any null churches
-        $churches = array_filter($churches);
+        // Get all youths that could be added
+        $allYouths = $entityManager->createQueryBuilder()
+            ->select('y', 'c', 's')  // Include church and sector in the query
+            ->from(Youth::class, 'y')
+            ->join('y.church', 'c')
+            ->join('c.sector', 's')
+            ->orderBy('s.name', 'ASC')
+            ->addOrderBy('c.name', 'ASC')
+            ->addOrderBy('y.lastName', 'ASC')
+            ->addOrderBy('y.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
 
-        // Get youths that are in the event's scope
+        // Get target youths based on scope
         $scopeYouths = $this->getScopeYouths($event, $entityManager);
         $scopeYouthIds = array_map(fn($youth) => $youth->getId(), $scopeYouths);
         
@@ -268,6 +318,56 @@ class EventController extends AbstractController
         $attendances = [];
         foreach ($event->getAttendances() as $attendance) {
             $attendances[$attendance->getYouth()->getId()] = $attendance;
+        }
+
+        // Get selected youths IDs (both from scope and existing attendances)
+        $selectedYouthIds = array_merge(
+            $scopeYouthIds,
+            array_keys($attendances)
+        );
+
+        // Get all youths that are not selected
+        $additionalYouths = $entityManager->createQueryBuilder()
+            ->select('y', 'c', 's')
+            ->from(Youth::class, 'y')
+            ->join('y.church', 'c')
+            ->join('c.sector', 's')
+            ->where('y.id NOT IN (:selectedIds)')
+            ->setParameter('selectedIds', array_unique($selectedYouthIds))
+            ->orderBy('s.name', 'ASC')
+            ->addOrderBy('c.name', 'ASC')
+            ->addOrderBy('y.lastName', 'ASC')
+            ->addOrderBy('y.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        // Group additional youths by sector and church
+        $groupedYouths = [];
+        foreach ($additionalYouths as $youth) {
+            $sectorId = $youth->getChurch()->getSector()->getId();
+            $churchId = $youth->getChurch()->getId();
+            
+            if (!isset($groupedYouths[$sectorId])) {
+                $groupedYouths[$sectorId] = [
+                    'name' => $youth->getChurch()->getSector()->getName(),
+                    'churches' => []
+                ];
+            }
+            
+            if (!isset($groupedYouths[$sectorId]['churches'][$churchId])) {
+                $groupedYouths[$sectorId]['churches'][$churchId] = [
+                    'name' => $youth->getChurch()->getName(),
+                    'youths' => []
+                ];
+            }
+            
+            $groupedYouths[$sectorId]['churches'][$churchId]['youths'][] = $youth;
+        }
+
+        // Sort sectors and churches
+        ksort($groupedYouths);
+        foreach ($groupedYouths as &$sector) {
+            ksort($sector['churches']);
         }
 
         if ($request->isMethod('POST')) {
@@ -303,8 +403,8 @@ class EventController extends AbstractController
 
         return $this->render('event/attendance.html.twig', [
             'event' => $event,
-            'churches' => $churches,
-            'all_churches' => $all_churches,
+            'churches' => $targetChurches,
+            'grouped_youths' => $event->getScope() !== 'general' ? $groupedYouths : [],
             'attendances' => $attendances,
             'scope_youth_ids' => $scopeYouthIds,
         ]);
@@ -339,9 +439,19 @@ class EventController extends AbstractController
     #[IsGranted('view', 'event')]
     public function export(Event $event, ChurchRepository $churchRepository): Response
     {
-        // Get churches from the event's sector
-        $churches = $churchRepository->findBy(['sector' => $event->getSector()]);
+        // Get churches based on event scope
+        $churches = match($event->getScope()) {
+            'general' => $churchRepository->findAll(),
+            'sector' => $event->getTargetSector 
+                ? $churchRepository->findBy(['sector' => $event->getTargetSector])
+                : ($event->getSector() 
+                    ? $churchRepository->findBy(['sector' => $event->getSector()])
+                    : []),
+            'church' => $event->getTargetChurch() ? [$event->getTargetChurch()] : [],
+            default => []
+        };
         
+        // Rest of the code remains the same
         // Get all attendances and calculate church statistics
         $attendances = [];
         $churchStats = [];

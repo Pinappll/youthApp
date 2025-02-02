@@ -132,7 +132,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lieu</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portée</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Secteur</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cible</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Présence</th>
                                 <th scope="col" class="relative px-6 py-3">
                                     <span class="sr-only">Actions</span>
@@ -152,15 +152,21 @@
                                         {{ event.location }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {% set scopes = {
-                                            'general': 'Tous les jeunes',
-                                            'sector': event.targetSector ? event.targetSector.name : (event.sector ? event.sector.name : 'Secteur non spécifié'),
-                                            'church': event.targetChurch ? event.targetChurch.name : 'Église non spécifiée'
+                                        {% set scope_types = {
+                                            'general': 'Générale',
+                                            'sector': 'Secteur',
+                                            'church': 'Église'
                                         } %}
-                                        {{ event.scope ? scopes[event.scope] : 'Non défini' }}
+                                        {{ scope_types[event.scope]|default('Non définie') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ event.sector ? event.sector.name : 'Non spécifié' }}
+                                        {% if event.scope == 'general' %}
+                                            <span class="text-gray-400">-</span>
+                                        {% elseif event.scope == 'sector' %}
+                                            {{ event.targetSector ? event.targetSector.name : (event.sector ? event.sector.name : 'Non spécifié') }}
+                                        {% else %}
+                                            {{ event.targetChurch ? event.targetChurch.name : 'Non spécifiée' }}
+                                        {% endif %}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {% if event.date < date() %}
@@ -228,19 +234,43 @@
                                         <dd class="mt-1 text-sm text-gray-900">{{ event.location }}</dd>
                                     </div>
                                     <div>
-                                        <dt class="text-sm font-medium text-gray-500">Portée</dt>
+                                        <dt class="text-sm font-medium text-gray-500">Type de portée</dt>
                                         <dd class="mt-1 text-sm text-gray-900">
-                                            {% set scopes = {
-                                                'general': 'Tous les jeunes',
-                                                'sector': event.targetSector ? event.targetSector.name : (event.sector ? event.sector.name : 'Secteur non spécifié'),
-                                                'church': event.targetChurch ? event.targetChurch.name : 'Église non spécifiée'
+                                            {% set scope_types = {
+                                                'general': 'Générale',
+                                                'sector': 'Secteur',
+                                                'church': 'Église'
                                             } %}
-                                            {{ event.scope ? scopes[event.scope] : 'Non défini' }}
+                                            {{ scope_types[event.scope]|default('Non définie') }}
                                         </dd>
                                     </div>
                                     <div>
+                                        <dt class="text-sm font-medium text-gray-500">Cible</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">
+                                            {% if event.scope == 'general' %}
+                                                <span class="text-gray-400">-</span>
+                                            {% elseif event.scope == 'sector' %}
+                                                {{ event.targetSector ? event.targetSector.name : (event.sector ? event.sector.name : 'Non spécifié') }}
+                                            {% else %}
+                                                {{ event.targetChurch ? event.targetChurch.name : 'Non spécifiée' }}
+                                            {% endif %}
+                                        </dd>
+                                    </div>
+                                    {% if event.scope != 'general' and event.sector %}
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-500">Secteur organisateur</dt>
+                                            <dd class="mt-1 text-sm text-gray-900">{{ event.sector ? event.sector.name : 'Non spécifié' }}</dd>
+                                        </div>
+                                    {% endif %}
+                                    <div>
                                         <dt class="text-sm font-medium text-gray-500">Secteur</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ event.sector ? event.sector.name : 'Non spécifié' }}</dd>
+                                        <dd class="mt-1 text-sm text-gray-900">
+                                            {% if event.scope == 'general' %}
+                                                <span class="text-gray-400">-</span>
+                                            {% else %}
+                                                {{ event.sector ? event.sector.name : 'Non spécifié' }}
+                                            {% endif %}
+                                        </dd>
                                     </div>
                                     <div>
                                         <dt class="text-sm font-medium text-gray-500">Présence</dt>
