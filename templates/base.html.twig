@@ -247,36 +247,29 @@
             <script>
                 // Mobile menu functionality
                 document.addEventListener('DOMContentLoaded', function() {
-                    initializeMobileMenu();
-                    initializeFilterPanel();
-                });
-
-                function initializeMobileMenu() {
                     const mobileMenu = document.getElementById('mobileMenu');
                     const backdrop = document.getElementById('backdrop');
                     const openButton = document.getElementById('openMobileMenu');
                     const closeButton = document.getElementById('closeMobileMenu');
                     
-                    if (!mobileMenu || !openButton || !closeButton || !backdrop) return;
+                    if (mobileMenu && openButton && closeButton && backdrop) {
+                        openButton.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            mobileMenu.style.display = 'flex';
+                            document.body.style.overflow = 'hidden';
+                        });
 
-                    function openMenu(e) {
-                        e.preventDefault();
-                        mobileMenu.style.display = 'flex';
-                        document.body.style.overflow = 'hidden';
+                        function closeMobileMenu(e) {
+                            e.preventDefault();
+                            mobileMenu.style.display = 'none';
+                            document.body.style.overflow = '';
+                        }
+
+                        closeButton.addEventListener('click', closeMobileMenu);
+                        backdrop.addEventListener('click', closeMobileMenu);
                     }
 
-                    function closeMenu(e) {
-                        e.preventDefault();
-                        mobileMenu.style.display = 'none';
-                        document.body.style.overflow = '';
-                    }
-
-                    openButton.addEventListener('click', openMenu);
-                    closeButton.addEventListener('click', closeMenu);
-                    backdrop.addEventListener('click', closeMenu);
-                }
-
-                function initializeFilterPanel() {
+                    // Initialize filter panel if it exists
                     const filterPanel = document.getElementById('filterPanel');
                     if (filterPanel) {
                         const urlParams = new URLSearchParams(window.location.search);
@@ -284,7 +277,7 @@
                             filterPanel.classList.remove('hidden');
                         }
                     }
-                }
+                });
             </script>
             {% block javascripts_inline %}{% endblock %}
         {% endblock %}
