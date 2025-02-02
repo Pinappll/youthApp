@@ -4,6 +4,19 @@
         <meta charset="UTF-8">
         <title>{% block title %}Welcome!{% endblock %}</title>
         <link rel="icon" href="{{ asset('images/Youth.svg') }}">
+        
+        <!-- Twitter Card meta tags -->
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:title" content="Youth Ministry">
+        <meta name="twitter:description" content="Application de gestion des jeunes">
+        <meta name="twitter:image" content="{{ absolute_url(asset('images/Youth.svg')) }}">
+        
+        <!-- General meta tags that Twitter also uses -->
+        <meta property="og:title" content="Youth Ministry">
+        <meta property="og:description" content="Application de gestion des jeunes">
+        <meta property="og:image" content="{{ absolute_url(asset('images/Youth.svg')) }}">
+        <meta property="og:type" content="website">
+        
         <link href="{{ asset('styles/app.css') }}" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         {% block stylesheets %}{% endblock %}
