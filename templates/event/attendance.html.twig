@@ -25,24 +25,61 @@
 {% endblock %}
 
 {% block crud_content %}
-    {# Statistics Section #}
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Statistiques</h3>
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <div class="bg-gray-50 overflow-hidden rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total des participants</dt>
-                            <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                                {{ attendances|filter(a => a.isPresent)|length }} / {{ attendances|length }}
-                            </dd>
-                        </dl>
+    {# Mobile-optimized sticky header #}
+    <div class="md:hidden sticky top-0 z-20 bg-white -mx-4 px-4 py-4 shadow-sm">
+        <div class="flex flex-col space-y-2">
+            <h1 class="text-xl font-semibold text-gray-900">
+                {{ event.name }}
+            </h1>
+            <div class="text-sm text-gray-500">
+                {% set scope_display = {
+                    'general': 'Portée générale',
+                    'sector': event.getTargetSector() ? 'Secteur : ' ~ event.getTargetSector().name : (event.sector ? 'Secteur : ' ~ event.sector.name : 'Secteur non spécifié'),
+                    'church': event.getTargetChurch() ? 'Église : ' ~ event.getTargetChurch().name : 'Église non spécifiée'
+                } %}
+                {{ scope_display[event.scope]|default('Non définie') }}
+            </div>
+            <a href="{{ path('app_event_show', {'id': event.id}) }}" 
+               class="inline-flex items-center text-sm text-indigo-600">
+                <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Retour aux détails
+            </a>
+        </div>
+    </div>
+
+    {# Desktop header - unchanged #}
+    <div class="hidden md:block">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-semibold text-gray-900">
+                Présences - {{ event.name }}
+                <span class="text-sm text-gray-500 block">
+                    {% set scope_display = {
+                        'general': 'Portée générale',
+                        'sector': event.getTargetSector() ? 'Secteur : ' ~ event.getTargetSector().name : (event.sector ? 'Secteur : ' ~ event.sector.name : 'Secteur non spécifié'),
+                        'church': event.getTargetChurch() ? 'Église : ' ~ event.getTargetChurch().name : 'Église non spécifiée'
+                    } %}
+                    {{ scope_display[event.scope]|default('Non définie') }}
+                </span>
+            </h1>
+        </div>
+    </div>
+
+    <form method="post" class="space-y-6 mt-4 pb-24 md:pb-0">
+        {# Mobile-optimized statistics cards #}
+        <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Statistiques</h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <dt class="text-sm font-medium text-gray-500">Total des participants</dt>
+                        <dd class="mt-1 text-2xl font-semibold text-gray-900">
+                            {{ attendances|filter(a => a.isPresent)|length }} / {{ attendances|length }}
+                        </dd>
                     </div>
-                </div>
-                
-                <div class="bg-gray-50 overflow-hidden rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
                         <dt class="text-sm font-medium text-gray-500 mb-2">Répartition par église</dt>
                         <div class="space-y-2">
                             {% set churchStats = {} %}
@@ -65,108 +102,131 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <form method="post" class="space-y-8">
-        {# Additional Youths Section #}
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div class="px-4 py-5 sm:px-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Ajouter des jeunes supplémentaires</h3>
-                <p class="mt-1 text-sm text-gray-500">Sélectionnez des jeunes à ajouter à cet événement.</p>
-            </div>
-            <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
-                {% if grouped_youths|length > 0 %}
-                    <div class="space-y-8">
+        {# Mobile-optimized Additional Youths Section with Accordion #}
+        <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+            <button type="button" 
+                    onclick="toggleAdditionalYouths()"
+                    class="w-full px-4 py-5 sm:px-6 flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Ajouter des jeunes</h3>
+                    <p class="mt-1 text-sm text-gray-500">Sélectionnez des jeunes à ajouter à cet événement</p>
+                </div>
+                <svg id="additionalYouthsIcon" class="h-5 w-5 transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+
+            <div id="additionalYouthsPanel" class="hidden border-t border-gray-200">
+                <div class="px-4 py-5 sm:px-6 space-y-6">
+                    {% if grouped_youths|length > 0 %}
                         {% for sector_id, sector in grouped_youths %}
                             <div class="space-y-4">
-                                <h4 class="font-medium text-lg text-gray-900">{{ sector.name }}</h4>
-                                {% for church_id, church in sector.churches %}
-                                    <div class="ml-4 space-y-2">
-                                        <h5 class="font-medium text-gray-700">{{ church.name }}</h5>
-                                        <div class="ml-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-                                            {% for youth in church.youths %}
-                                                <div class="flex items-center">
-                                                    <input type="checkbox" 
-                                                           name="additional_youths[]" 
-                                                           value="{{ youth.id }}"
-                                                           class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                                    <label class="ml-2 text-sm text-gray-700">
-                                                        {{ youth.lastName }} {{ youth.firstName }}
+                                <button type="button"
+                                        onclick="toggleSector('sector-{{ sector_id }}')"
+                                        class="w-full flex justify-between items-center text-left">
+                                    <h4 class="text-lg font-medium text-gray-900">{{ sector.name }}</h4>
+                                    <svg class="sector-icon h-5 w-5 transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                
+                                <div id="sector-{{ sector_id }}" class="hidden ml-4 space-y-4">
+                                    {% for church_id, church in sector.churches %}
+                                        <div class="space-y-3">
+                                            <h5 class="font-medium text-gray-700">{{ church.name }}</h5>
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {% for youth in church.youths %}
+                                                    <label class="flex items-center p-2 bg-gray-50 rounded-lg hover:bg-gray-100">
+                                                        <input type="checkbox" 
+                                                               name="additional_youths[]" 
+                                                               value="{{ youth.id }}"
+                                                               class="h-4 w-4 text-indigo-600 rounded border-gray-300">
+                                                        <span class="ml-2 text-sm text-gray-900">
+                                                            {{ youth.lastName }} {{ youth.firstName }}
+                                                        </span>
                                                     </label>
-                                                </div>
-                                            {% endfor %}
+                                                {% endfor %}
+                                            </div>
                                         </div>
-                                    </div>
-                                {% endfor %}
+                                    {% endfor %}
+                                </div>
                             </div>
                         {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-gray-500 text-sm">Aucun jeune supplémentaire disponible.</p>
-                {% endif %}
+                    {% else %}
+                        <p class="text-gray-500 text-sm text-center py-4">Aucun jeune supplémentaire disponible</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
+        {# Mobile-optimized attendance list #}
         {% for church in churches %}
             {% if church %}
-                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div class="px-4 py-5 sm:px-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">{{ church.name }}</h3>
+                <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">{{ church.name }}</h3>
                     </div>
-                    <div class="border-t border-gray-200 overflow-x-auto">
-                        <div class="min-w-full divide-y divide-gray-200">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Présent</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commentaire</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    {% for youth in church.youths %}
-                                        {% set attendance = attendances[youth.id] ?? null %}
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {{ youth.firstName }} {{ youth.lastName }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <label class="relative inline-flex items-center cursor-pointer">
-                                                    <input type="checkbox" 
-                                                           name="attendance[{{ youth.id }}][isPresent]" 
-                                                           {% if attendance and attendance.isPresent %}checked{% endif %}
-                                                           class="sr-only peer">
-                                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                                                    <span class="ml-2 text-sm font-medium text-gray-900 hidden">Présent</span>
-                                                </label>
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                <input type="text" 
-                                                       name="attendance[{{ youth.id }}][comment]" 
-                                                       value="{{ attendance ? attendance.comment : '' }}"
-                                                       class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                       placeholder="Commentaire">
-                                            </td>
-                                        </tr>
-                                    {% else %}
-                                        <tr>
-                                            <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                                Aucun jeune dans cette église
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="divide-y divide-gray-200">
+                        {% for youth in church.youths %}
+                            {% set attendance = attendances[youth.id] ?? null %}
+                            <div class="p-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">
+                                            {{ youth.firstName }} {{ youth.lastName }}
+                                        </p>
+                                    </div>
+                                    <div class="ml-4">
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" 
+                                                   name="attendance[{{ youth.id }}][isPresent]" 
+                                                   {% if attendance and attendance.isPresent %}checked{% endif %}
+                                                   class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <input type="text" 
+                                           name="attendance[{{ youth.id }}][comment]" 
+                                           value="{{ attendance ? attendance.comment : '' }}"
+                                           class="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                           placeholder="Commentaire">
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
             {% endif %}
         {% endfor %}
 
-        <div class="flex justify-end px-4 sm:px-0">
-            <button type="submit" class="w-full sm:w-auto inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Enregistrer les présences
-            </button>
+        {# Fixed submit button for mobile with proper spacing #}
+        <div class="fixed bottom-0 inset-x-0 pb-safe bg-white border-t border-gray-200 p-4 md:static md:border-0 md:p-0 md:bg-transparent md:mt-6">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <button type="submit" 
+                        class="w-full md:w-auto inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Enregistrer les présences
+                </button>
+            </div>
         </div>
     </form>
+{% endblock %}
+
+{% block javascripts_inline %}
+<script>
+function toggleAdditionalYouths() {
+    const panel = document.getElementById('additionalYouthsPanel');
+    const icon = document.getElementById('additionalYouthsIcon');
+    panel.classList.toggle('hidden');
+    icon.style.transform = panel.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+function toggleSector(sectorId) {
+    const content = document.getElementById(sectorId);
+    const icon = content.previousElementSibling.querySelector('.sector-icon');
+    content.classList.toggle('hidden');
+    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+</script>
 {% endblock %}

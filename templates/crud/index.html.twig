@@ -1,26 +1,19 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {# Header section #}
-            <div class="md:flex md:items-center md:justify-between">
-                <div class="flex-1 min-w-0">
-                    {% block crud_title %}{% endblock %}
-                </div>
-                <div class="mt-4 flex md:mt-0 md:ml-4">
-                    {% block crud_actions %}{% endblock %}
-                </div>
-            </div>
-
-            {# Filters section #}
-            {% block crud_filters %}{% endblock %}
-
-            {# Main content section #}
-            <div class="mt-6">
-                {% block crud_content %}{% endblock %}
-            </div>
+    <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0">
+            {% block crud_title %}{% endblock %}
         </div>
+        <div class="mt-6 md:mt-0 md:ml-4">
+            {% block crud_actions %}{% endblock %}
+        </div>
+    </div>
+
+    {% block crud_filters %}{% endblock %}
+
+    <div class="mt-8">
+        {% block crud_content %}{% endblock %}
     </div>
 {% endblock %}
 
