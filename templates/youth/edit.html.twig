@@ -29,19 +29,21 @@
 {% endblock %}
 
 {% block crud_content %}
-    <div class="mt-6">
-        {% include 'youth/_form.html.twig' with {'button_label': 'Mettre à jour'} %}
-        
-        <div class="mt-6">
-            <form method="post" action="{{ path('app_youth_delete', {'id': youth.id}) }}" 
-                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce jeune ?');"
-                  class="flex justify-center sm:justify-end">
-                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ youth.id) }}">
-                <button type="submit" 
-                        class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                    Supprimer
-                </button>
-            </form>
+    <div class="pb-20 sm:pb-6"> {# Increased bottom padding for mobile #}
+        <div class="pb-16 sm:pb-0">
+            {% include 'youth/_form.html.twig' with {'button_label': 'Mettre à jour'} %}
+            
+            <div class="mt-6 mb-4 sm:mb-0">
+                <form method="post" action="{{ path('app_youth_delete', {'id': youth.id}) }}" 
+                      onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce jeune ?');"
+                      class="flex justify-center sm:justify-end">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ youth.id) }}">
+                    <button type="submit" 
+                            class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        Supprimer
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 {% endblock %}

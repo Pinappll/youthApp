@@ -7,7 +7,9 @@
 {% endblock %}
 
 {% block crud_content %}
-    {% include 'youth/_form.html.twig' with {'button_label': 'Créer'} %}
+    <div class="pb-20 sm:pb-6"> {# Increased bottom padding for mobile #}
+        {% include 'youth/_form.html.twig' with {'button_label': 'Créer'} %}
+    </div>
 {% endblock %}
 
 {% set index_route = 'app_youth_index' %}

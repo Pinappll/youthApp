@@ -1,255 +1,262 @@
-{% extends 'base.html.twig' %}
+{% extends 'crud/index.html.twig' %}
 
-{% block body %}
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {# Header with title and actions - Mobile optimized #}
-            <div class="space-y-4 md:space-y-0 md:flex md:items-center md:justify-between">
-                <div class="flex-1 min-w-0">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-                        <div class="w-20 h-20 sm:w-16 sm:h-16 flex-shrink-0 mx-auto sm:mx-0">
-                            <img src="{{ youth.photo ? asset(youth.photo) : asset('images/userDefaultImg.jpg') }}" 
-                                 alt="{{ youth.firstName }} {{ youth.lastName }}"
-                                 class="w-full h-full rounded-full object-cover shadow-lg">
-                        </div>
-                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 text-center sm:text-left mt-2 sm:mt-0">
+{% block crud_content %}
+    <div class="pb-20 sm:pb-6"> {# Increased bottom padding for mobile #}
+        {# Mobile optimized header with photo #}
+        <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex flex-col items-center sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                    <div class="w-32 h-32 sm:w-24 sm:h-24 flex-shrink-0">
+                        <img src="{{ youth.photo ? asset(youth.photo) : asset('images/userDefaultImg.jpg') }}" 
+                             alt="{{ youth.firstName }} {{ youth.lastName }}"
+                             class="w-full h-full rounded-full object-cover shadow-lg">
+                    </div>
+                    <div class="text-center sm:text-left">
+                        <h1 class="text-2xl font-bold text-gray-900">
                             {{ youth.firstName }} {{ youth.lastName }}
                         </h1>
+                        <p class="mt-1 text-sm text-gray-500">
+                            {{ youth.church.name }}
+                        </p>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                    <a href="{{ path('app_youth_index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                        </svg>
-                        Retour
-                    </a>
-                    <a href="{{ path('app_youth_edit', {'id': youth.id}) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
-                        Modifier
-                    </a>
+            </div>
+            
+            {# Mobile optimized action buttons #}
+            <div class="px-4 py-4 sm:px-6 bg-gray-50 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                <a href="{{ path('app_youth_edit', {'id': youth.id}) }}" 
+                   class="inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Modifier
+                </a>
+                <a href="{{ path('app_youth_index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Retour
+                </a>
+            </div>
+        </div>
+
+        {# Rest of the content #}
+        <div class="mt-8 space-y-6">
+            {# Information Card #}
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Informations du jeune
+                    </h3>
+                </div>
+                <div class="border-t border-gray-200">
+                    <dl>
+                        <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Nom complet</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.firstName }} {{ youth.lastName }}</dd>
+                        </div>
+                        <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Date de naissance</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.birthDate|date('d/m/Y') }}</dd>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Téléphone</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.phone }}</dd>
+                        </div>
+                        <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Adresse</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.address }}</dd>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Église</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.church.name }}</dd>
+                        </div>
+                    </dl>
                 </div>
             </div>
 
-            <div class="mt-8 space-y-6">
-                {# Information Card #}
-                <div class="bg-white shadow sm:rounded-lg">
-                    <div class="px-4 py-5 sm:px-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">
-                            Informations du jeune
-                        </h3>
+            {# Attendance History - Mobile optimized #}
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
+                        <h3 class="text-lg font-medium text-gray-900">Historique des présences</h3>
+                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                            {% if presence is not empty or month is not empty %}
+                                <span class="inline-flex px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full">
+                                    {{ presence == 'present' ? 'Présent' : (presence == 'absent' ? 'Absent' : '') }}
+                                    {{ month ? '• ' ~ month|date('F Y') : '' }}
+                                </span>
+                            {% endif %}
+                            <button type="button" 
+                                    onclick="toggleFilters()"
+                                    class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                                </svg>
+                                Filtres
+                            </button>
+                        </div>
                     </div>
-                    <div class="border-t border-gray-200">
-                        <dl>
-                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Nom complet</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.firstName }} {{ youth.lastName }}</dd>
+
+                    <div id="filterPanel" class="hidden mt-4 p-4 bg-gray-50 rounded-md">
+                        <form id="filterForm" class="space-y-4 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-4" method="get">
+                            <div class="w-full sm:w-auto">
+                                <fieldset class="space-y-2">
+                                    <legend class="block text-sm font-medium text-gray-700">Présence</legend>
+                                    <div class="flex space-x-4">
+                                        <label class="inline-flex items-center">
+                                            <input type="radio" name="presence" value="" {{ presence is empty ? 'checked' : '' }}
+                                                   class="form-radio h-4 w-4 text-indigo-600">
+                                            <span class="ml-2 text-sm text-gray-700">Tous</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="radio" name="presence" value="present" {{ presence == 'present' ? 'checked' : '' }}
+                                                   class="form-radio h-4 w-4 text-indigo-600">
+                                            <span class="ml-2 text-sm text-gray-700">Présent</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="radio" name="presence" value="absent" {{ presence == 'absent' ? 'checked' : '' }}
+                                                   class="form-radio h-4 w-4 text-indigo-600">
+                                            <span class="ml-2 text-sm text-gray-700">Absent</span>
+                                        </label>
+                                    </div>
+                                </fieldset>
                             </div>
-                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Date de naissance</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.birthDate|date('d/m/Y') }}</dd>
+                            <div class="w-full sm:w-auto">
+                                <label for="month" class="block text-sm font-medium text-gray-700">Période</label>
+                                <input type="month" id="month" name="month" value="{{ month }}"
+                                       class="mt-1 block w-full sm:w-48 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             </div>
-                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Téléphone</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.phone }}</dd>
+                            <div class="w-full sm:w-auto flex items-end space-x-2">
+                                <button type="submit" 
+                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Appliquer
+                                </button>
+                                <button type="button" 
+                                        onclick="clearFilters()"
+                                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Réinitialiser
+                                </button>
                             </div>
-                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Adresse</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.address }}</dd>
-                            </div>
-                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Église</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ youth.church.name }}</dd>
-                            </div>
-                        </dl>
+                        </form>
                     </div>
                 </div>
 
-                {# Attendance History - Mobile optimized #}
-                <div class="bg-white shadow sm:rounded-lg">
-                    <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-medium text-gray-900">Historique des présences</h3>
-                            <div class="flex items-center space-x-2">
-                                {% if presence is not empty or month is not empty %}
-                                    <span class="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full">
-                                        {{ presence == 'present' ? 'Présent' : (presence == 'absent' ? 'Absent' : '') }}
-                                        {{ month ? '• ' ~ month|date('F Y') : '' }}
-                                    </span>
-                                {% endif %}
-                                <button type="button" 
-                                        onclick="toggleFilters()"
-                                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                                    </svg>
-                                    Filtres
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="filterPanel" class="hidden mt-4 p-4 bg-gray-50 rounded-md">
-                            <form id="filterForm" class="flex flex-wrap gap-4" method="get">
-                                <div class="w-full sm:w-auto">
-                                    <fieldset class="space-y-2">
-                                        <legend class="block text-sm font-medium text-gray-700">Présence</legend>
-                                        <div class="flex space-x-4">
-                                            <label class="inline-flex items-center">
-                                                <input type="radio" name="presence" value="" {{ presence is empty ? 'checked' : '' }}
-                                                       class="form-radio h-4 w-4 text-indigo-600">
-                                                <span class="ml-2 text-sm text-gray-700">Tous</span>
-                                            </label>
-                                            <label class="inline-flex items-center">
-                                                <input type="radio" name="presence" value="present" {{ presence == 'present' ? 'checked' : '' }}
-                                                       class="form-radio h-4 w-4 text-indigo-600">
-                                                <span class="ml-2 text-sm text-gray-700">Présent</span>
-                                            </label>
-                                            <label class="inline-flex items-center">
-                                                <input type="radio" name="presence" value="absent" {{ presence == 'absent' ? 'checked' : '' }}
-                                                       class="form-radio h-4 w-4 text-indigo-600">
-                                                <span class="ml-2 text-sm text-gray-700">Absent</span>
-                                            </label>
-                                        </div>
-                                    </fieldset>
-                                </div>
-                                <div class="w-full sm:w-auto">
-                                    <label for="month" class="block text-sm font-medium text-gray-700">Période</label>
-                                    <input type="month" id="month" name="month" value="{{ month }}"
-                                           class="mt-1 block w-full sm:w-48 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                </div>
-                                <div class="w-full sm:w-auto flex items-end space-x-2">
-                                    <button type="submit" 
-                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                        Appliquer
-                                    </button>
-                                    <button type="button" 
-                                            onclick="clearFilters()"
-                                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                        Réinitialiser
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    {# Mobile version of attendance list #}
-                    <div class="sm:hidden">
-                        <ul class="divide-y divide-gray-200">
-                            {% for attendance in attendances %}
-                                <li class="p-4">
-                                    <div class="flex flex-col space-y-2">
-                                        <div class="flex justify-between items-start">
-                                            <a href="{{ path('app_event_show', {'id': attendance.event.id}) }}" 
-                                               class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
-                                                {{ attendance.event.name }}
-                                            </a>
-                                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ attendance.isPresent ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                                {{ attendance.isPresent ? 'Présent' : 'Absent' }}
-                                            </span>
-                                        </div>
-                                        <div class="text-xs text-gray-500">
-                                            {{ attendance.event.date|date('d/m/Y H:i') }}
-                                        </div>
-                                        {% if attendance.comment %}
-                                            <div class="text-sm text-gray-600 mt-1">
-                                                {{ attendance.comment }}
-                                            </div>
-                                        {% endif %}
+                {# Mobile version of attendance list #}
+                <div class="block sm:hidden">
+                    <ul class="divide-y divide-gray-200">
+                        {% for attendance in attendances %}
+                            <li class="p-4">
+                                <div class="flex flex-col space-y-2">
+                                    <div class="flex justify-between items-start">
+                                        <a href="{{ path('app_event_show', {'id': attendance.event.id}) }}" 
+                                           class="text-sm font-medium text-indigo-600 hover:text-indigo-900 break-words flex-1 mr-2">
+                                            {{ attendance.event.name }}
+                                        </a>
+                                        <span class="flex-shrink-0 px-2 py-1 text-xs font-semibold rounded-full {{ attendance.isPresent ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ attendance.isPresent ? 'Présent' : 'Absent' }}
+                                        </span>
                                     </div>
-                                </li>
-                            {% else %}
-                                <li class="p-4 text-sm text-gray-500 text-center">
-                                    Aucune présence enregistrée
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-
-                    {# Desktop version #}
-                    <div class="hidden sm:block">
-                        <ul class="divide-y divide-gray-200">
-                            {% for attendance in attendances %}
-                                <li class="px-4 py-4 sm:px-6">
-                                    <div class="flex items-center justify-between">
-                                        <div class="text-sm font-medium text-indigo-600">
-                                            <a href="{{ path('app_event_show', {'id': attendance.event.id}) }}" class="hover:text-indigo-900">
-                                                {{ attendance.event.name }}
-                                            </a>
-                                        </div>
-                                        <div class="flex items-center space-x-4">
-                                            <div class="text-sm text-gray-500">
-                                                {{ attendance.event.date|date('d/m/Y H:i') }}
-                                            </div>
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ attendance.isPresent ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                                {{ attendance.isPresent ? 'Présent' : 'Absent' }}
-                                            </span>
-                                        </div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ attendance.event.date|date('d/m/Y H:i') }}
                                     </div>
                                     {% if attendance.comment %}
-                                        <div class="mt-2 text-sm text-gray-500">
+                                        <div class="text-sm text-gray-600 mt-1 break-words">
                                             {{ attendance.comment }}
                                         </div>
                                     {% endif %}
-                                </li>
-                            {% else %}
-                                <li class="px-4 py-4 sm:px-6 text-sm text-gray-500">Aucune présence enregistrée</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-
-                    {# Pagination - Mobile optimized #}
-                    <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 sm:px-6">
-                        <nav aria-label="Page navigation" class="flex justify-center">
-                            <ul class="inline-flex flex-wrap justify-center gap-2">
-                                {% if currentPage > 1 %}
-                                    <li>
-                                        <a href="{{ path('app_youth_show', {
-                                            id: youth.id,
-                                            page: currentPage - 1,
-                                            presence: presence,
-                                            month: month
-                                        }) }}" 
-                                           class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
-                                            Précédent
-                                        </a>
-                                    </li>
-                                {% endif %}
-                                
-                                {% set pages = max(1, totalPages) %}
-                                {% for i in 1..pages %}
-                                    <li>
-                                        <a href="{{ path('app_youth_show', {
-                                            id: youth.id,
-                                            page: i,
-                                            presence: presence,
-                                            month: month
-                                        }) }}" 
-                                           class="px-4 py-2 border {% if i == currentPage %}bg-indigo-600 border-indigo-600 text-white{% else %}border-gray-300 text-gray-700 hover:bg-gray-50{% endif %} rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
-                                            {{ i }}
-                                        </a>
-                                    </li>
-                                {% endfor %}
-                                
-                                {% if currentPage < totalPages %}
-                                    <li>
-                                        <a href="{{ path('app_youth_show', {
-                                            id: youth.id,
-                                            page: currentPage + 1,
-                                            presence: presence,
-                                            month: month
-                                        }) }}" 
-                                           class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
-                                            Suivant
-                                        </a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
-                    </div>
-
+                                </div>
+                            </li>
+                        {% else %}
+                            <li class="p-4 text-sm text-gray-500 text-center">
+                                Aucune présence enregistrée
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
+
+                {# Desktop version #}
+                <div class="hidden sm:block">
+                    <ul class="divide-y divide-gray-200">
+                        {% for attendance in attendances %}
+                            <li class="px-4 py-4 sm:px-6">
+                                <div class="flex items-center justify-between">
+                                    <div class="text-sm font-medium text-indigo-600">
+                                        <a href="{{ path('app_event_show', {'id': attendance.event.id}) }}" class="hover:text-indigo-900">
+                                            {{ attendance.event.name }}
+                                        </a>
+                                    </div>
+                                    <div class="flex items-center space-x-4">
+                                        <div class="text-sm text-gray-500">
+                                            {{ attendance.event.date|date('d/m/Y H:i') }}
+                                        </div>
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ attendance.isPresent ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ attendance.isPresent ? 'Présent' : 'Absent' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% if attendance.comment %}
+                                    <div class="mt-2 text-sm text-gray-500">
+                                        {{ attendance.comment }}
+                                    </div>
+                                {% endif %}
+                            </li>
+                        {% else %}
+                            <li class="px-4 py-4 sm:px-6 text-sm text-gray-500">Aucune présence enregistrée</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                {# Pagination - Mobile optimized #}
+                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 sm:px-6">
+                    <nav aria-label="Page navigation" class="flex justify-center">
+                        <ul class="inline-flex flex-wrap justify-center gap-2">
+                            {% if currentPage > 1 %}
+                                <li>
+                                    <a href="{{ path('app_youth_show', {
+                                        id: youth.id,
+                                        page: currentPage - 1,
+                                        presence: presence,
+                                        month: month
+                                    }) }}" 
+                                       class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                        Précédent
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% set pages = max(1, totalPages) %}
+                            {% for i in 1..pages %}
+                                <li>
+                                    <a href="{{ path('app_youth_show', {
+                                        id: youth.id,
+                                        page: i,
+                                        presence: presence,
+                                        month: month
+                                    }) }}" 
+                                       class="px-4 py-2 border {% if i == currentPage %}bg-indigo-600 border-indigo-600 text-white{% else %}border-gray-300 text-gray-700 hover:bg-gray-50{% endif %} rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                        {{ i }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                            
+                            {% if currentPage < totalPages %}
+                                <li>
+                                    <a href="{{ path('app_youth_show', {
+                                        id: youth.id,
+                                        page: currentPage + 1,
+                                        presence: presence,
+                                        month: month
+                                    }) }}" 
+                                       class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                        Suivant
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+
             </div>
         </div>
     </div>

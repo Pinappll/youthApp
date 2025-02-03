@@ -442,8 +442,8 @@ class EventController extends AbstractController
         // Get churches based on event scope
         $churches = match($event->getScope()) {
             'general' => $churchRepository->findAll(),
-            'sector' => $event->getTargetSector 
-                ? $churchRepository->findBy(['sector' => $event->getTargetSector])
+            'sector' => $event->getTargetSector() 
+                ? $churchRepository->findBy(['sector' => $event->getTargetSector()])
                 : ($event->getSector() 
                     ? $churchRepository->findBy(['sector' => $event->getSector()])
                     : []),

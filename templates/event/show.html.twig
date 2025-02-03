@@ -3,7 +3,7 @@
 {% block title %}{{ event.name }}{% endblock %}
 
 {% block body %}
-<div class="py-6">
+<div class="py-6 pb-20 sm:pb-6"> {# Added bottom padding for mobile #}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
             <h1 class="text-2xl font-semibold text-gray-900">{{ event.name }}</h1>
@@ -40,10 +40,10 @@
                             <dt class="text-sm font-medium text-gray-500">Lieu</dt>
                             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.location }}</dd>
                         </div>
-                        <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        {# <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Secteur</dt>
                             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.sector ? event.sector.name : 'Non spécifié' }}</dd>
-                        </div>
+                        </div> #}
                         <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Type de portée</dt>
                             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
@@ -67,12 +67,12 @@
                                 {% endif %}
                             </dd>
                         </div>
-                        {% if event.scope != 'general' and event.sector %}
+                        {# {% if event.scope != 'general' and event.sector %}
                             <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-500">Secteur organisateur</dt>
                                 <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.sector.name }}</dd>
                             </div>
-                        {% endif %}
+                        {% endif %} #}
                         {% if event.scope == 'church' and event.targetChurch %}
                             <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-500">Église cible</dt>
