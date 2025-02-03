@@ -9,8 +9,8 @@
         <span class="text-sm text-gray-500 block">
             {% set scope_display = {
                 'general': 'Portée générale',
-                'sector': event.targetSector ? 'Secteur : ' ~ event.targetSector.name : (event.sector ? 'Secteur : ' ~ event.sector.name : 'Secteur non spécifié'),
-                'church': event.targetChurch ? 'Église : ' ~ event.targetChurch.name : 'Église non spécifiée'
+                'sector': event.getTargetSector() ? 'Secteur : ' ~ event.getTargetSector().name : (event.sector ? 'Secteur : ' ~ event.sector.name : 'Secteur non spécifié'),
+                'church': event.getTargetChurch() ? 'Église : ' ~ event.getTargetChurch().name : 'Église non spécifiée'
             } %}
             {{ scope_display[event.scope]|default('Non définie') }}
         </span>
