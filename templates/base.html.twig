@@ -326,9 +326,21 @@
                 }
 
                 if ("serviceWorker" in navigator) {
-                    navigator.serviceWorker.register("/sw.js")
-                        .then(() => console.log("Service Worker enregistré !"))
-                        .catch((err) => console.error("Erreur Service Worker:", err));
+                    navigator.serviceWorker.register("/sw.js").then((registration) => {
+                        registration.update(); // Met à jour le SW après login
+                    });
+
+                    navigator.serviceWorker.ready.then((registration) => {
+                        if (navigator.onLine) {
+                            registration.active.postMessage({ action: "clear-cache" });
+                        }
+                    });
+                }
+
+                if (window.matchMedia("(display-mode: standalone)").matches) {
+                    if (window.location.pathname === "/login") {
+                        window.location.href = "/";
+                    }
                 }
             </script>
             {% block javascripts_inline %}{% endblock %}

@@ -2,8 +2,9 @@ const CACHE_NAME = "youth-app-v1";
 const urlsToCache = [
   "/",
   "/manifest.json",
-  "/images/icons/icon-192x192.png",
-  "/images/icons/icon-512x512.png",
+  "/icons/icon-192x192.png",
+  "/icons/icon-512x512.png",
+  "/offline.html",
 ];
 
 self.addEventListener("install", (event) => {
@@ -22,13 +23,21 @@ self.addEventListener("fetch", (event) => {
     caches.match(event.request).then((response) => {
       return (
         response ||
-        fetch(event.request).catch(() => caches.match("/offline.html"))
+        fetch(event.request)
+          .then((networkResponse) => {
+            // Mettre en cache les nouvelles pages après le login
+            return caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, networkResponse.clone());
+              return networkResponse;
+            });
+          })
+          .catch(() => caches.match("/offline.html"))
       );
     })
   );
 });
 
-// Supprimer les anciens caches lors de l'activation du nouveau service worker
+// Nettoyage des anciens caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -39,4 +48,10 @@ self.addEventListener("activate", (event) => {
       );
     })
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data.action === "clear-cache") {
+    caches.delete(CACHE_NAME);
+  }
 });
