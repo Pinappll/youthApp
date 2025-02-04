@@ -342,6 +342,22 @@
                         window.location.href = "/";
                     }
                 }
+
+                document.addEventListener("DOMContentLoaded", function() {
+                    const logoutForm = document.getElementById("logout-form");
+                    if (logoutForm) {
+                        logoutForm.addEventListener("submit", function() {
+                            if ("caches" in window) {
+                                caches.keys().then((names) => {
+                                    names.forEach((name) => caches.delete(name));
+                                });
+                            }
+                            if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+                                navigator.serviceWorker.controller.postMessage({ action: "clear-cache" });
+                            }
+                        });
+                    }
+                });
             </script>
             {% block javascripts_inline %}{% endblock %}
         {% endblock %}
