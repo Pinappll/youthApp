@@ -133,36 +133,43 @@ class YouthRepository extends ServiceEntityRepository
     }
 
     public function findUpcomingBirthdays(\DateTime $from, \DateTime $to): array
-    {
-        // Get all youths with birthdays
-        $qb = $this->createQueryBuilder('y')
-            ->where('y.birthDate IS NOT NULL')
-            ->orderBy('y.birthDate', 'ASC')
-            ->getQuery()
-            ->getResult();
+{
+    // Récupérer tous les Youth avec une date de naissance
+    $qb = $this->createQueryBuilder('y')
+        ->where('y.birthDate IS NOT NULL')
+        ->getQuery()
+        ->getResult();
 
-        // Filter in PHP for upcoming birthdays
-        $upcomingBirthdays = array_filter($qb, function(Youth $youth) use ($from, $to) {
-            $birthday = $youth->getBirthDate();
-            if (!$birthday) {
-                return false;
-            }
+    // Récupérer la date actuelle en format mois-jour (ex: "0211" pour le 11 février)
+    $today = (int)(new \DateTime())->format('md');
+    $fromDate = (int)$from->format('md');
+    $toDate = (int)$to->format('md');
 
-            // Create dates for comparison using only month and day
-            $birthdayDate = \DateTime::createFromFormat('!m-d', $birthday->format('m-d'));
-            $fromDate = \DateTime::createFromFormat('!m-d', $from->format('m-d'));
-            $toDate = \DateTime::createFromFormat('!m-d', $to->format('m-d'));
+    // Filtrage des anniversaires dans la plage de dates
+    $upcomingBirthdays = array_filter($qb, function(Youth $youth) use ($fromDate, $toDate, $today) {
+        $birthday = $youth->getBirthDate();
+        if (!$birthday) {
+            return false;
+        }
 
-            return $birthdayDate >= $fromDate && $birthdayDate <= $toDate;
-        });
+        // Extraire mois et jour de l'anniversaire
+        $birthdayDate = (int)$birthday->format('md');
 
-        // Sort by month and day
-        usort($upcomingBirthdays, function(Youth $a, Youth $b) {
-            $dateA = $a->getBirthDate()->format('md');
-            $dateB = $b->getBirthDate()->format('md');
-            return $dateA <=> $dateB;
-        });
+        // Cas où la plage traverse une année (ex: 15 décembre → 15 janvier)
+        if ($fromDate > $toDate) {
+            return ($birthdayDate >= $fromDate || $birthdayDate <= $toDate) && $birthdayDate >= $today;
+        }
 
-        return array_values($upcomingBirthdays);
-    }
+        // Cas normal (ex: 1 février → 1 mars)
+        return $birthdayDate >= $fromDate && $birthdayDate <= $toDate && $birthdayDate >= $today;
+    });
+
+    // Trier les anniversaires par mois et jour
+    usort($upcomingBirthdays, function(Youth $a, Youth $b) {
+        return (int)$a->getBirthDate()->format('md') <=> (int)$b->getBirthDate()->format('md');
+    });
+
+    return array_values($upcomingBirthdays);
+}
+
 }
