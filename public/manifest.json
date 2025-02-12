@@ -2,7 +2,7 @@
   "name": "Youth",
   "short_name": "Youth",
   "start_url": "/",
-  "display": "minimal-ui",
+  "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
   "icons": [
