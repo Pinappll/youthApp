@@ -15,15 +15,32 @@ self.addEventListener("install", (event) => {
       .then((cache) => cache.addAll(urlsToCache))
       .catch((err) => console.error("Cache addAll error:", err))
   );
+  self.skipWaiting(); // Force l'installation immédiate
+});
+
+// Activation et suppression des anciens caches
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      );
+    })
+  );
+  self.clients.claim(); // Prendre immédiatement le contrôle des clients
 });
 
 // Intercepter les requêtes
 self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
 
-  // 🚀 Exclure la requête de logout et toutes les requêtes POST (ex: login, logout, formulaires)
+  // Exclure la requête de logout et toutes les requêtes POST (login, formulaires, etc.)
   if (requestUrl.pathname === "/logout" || event.request.method === "POST") {
-    return fetch(event.request);
+    return fetch(event.request).catch(
+      () => new Response("Offline", { status: 503 })
+    );
   }
 
   event.respondWith(
@@ -32,6 +49,13 @@ self.addEventListener("fetch", (event) => {
         response ||
         fetch(event.request)
           .then((networkResponse) => {
+            // Vérifier si la requête est une requête GET (éviter de stocker des requêtes dynamiques)
+            if (
+              !event.request.url.startsWith("http") ||
+              event.request.method !== "GET"
+            ) {
+              return networkResponse;
+            }
             return caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, networkResponse.clone());
               return networkResponse;
@@ -43,22 +67,16 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// Nettoyage des anciens caches
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      );
-    })
-  );
-});
-
 // Supprimer le cache après logout
 self.addEventListener("message", (event) => {
-  if (event.data.action === "clear-cache") {
-    caches.delete(CACHE_NAME);
+  if (event.data && event.data.action === "clear-cache") {
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(cacheNames.map((cache) => caches.delete(cache)));
+      })
+      .then(() => {
+        console.log("Cache supprimé après logout.");
+      });
   }
 });
