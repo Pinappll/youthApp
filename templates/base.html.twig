@@ -286,6 +286,18 @@
 
         {% block javascript_footer %}
             <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const inputs = document.querySelectorAll("input, textarea");
+
+                inputs.forEach(input => {
+                    input.addEventListener("click", function() {
+                        setTimeout(() => {
+                            this.focus();
+                        }, 100); // Petit délai pour éviter une perte de focus immédiate
+                    });
+                });
+            });
+
                 // Mobile menu functionality
                 document.addEventListener('DOMContentLoaded', function() {
                     initializeMobileMenu();
