@@ -2,19 +2,21 @@ let touchStartY = 0;
 let touchEndY = 0;
 let threshold = 100; // Distance minimale pour détecter un pull-down
 
-window.addEventListener("touchstart", function (event) {
-  // Vérifier si l'élément actif est un champ de saisie
-  if (
-    event.target.tagName.toLowerCase() === "input" ||
-    event.target.tagName.toLowerCase() === "textarea"
-  ) {
-    return;
-  }
-  touchStartY = event.touches[0].clientY;
-});
+window.addEventListener(
+  "touchstart",
+  function (event) {
+    if (
+      event.target.tagName.toLowerCase() === "input" ||
+      event.target.tagName.toLowerCase() === "textarea"
+    ) {
+      return;
+    }
+    touchStartY = event.touches[0].clientY;
+  },
+  { passive: true } // Ajoute ceci pour éviter de bloquer le scroll natif
+);
 
 window.addEventListener("touchend", function (event) {
-  // Vérifier si l'élément actif est un champ de saisie
   if (
     event.target.tagName.toLowerCase() === "input" ||
     event.target.tagName.toLowerCase() === "textarea"
