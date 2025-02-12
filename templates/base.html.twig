@@ -6,12 +6,11 @@
         <link rel="icon" href="{{ asset('images/Youth.svg') }}">
         <link rel="manifest" href="{{ asset('manifest.json') }}">
         <meta name="theme-color" content="#ffffff">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="apple-touch-icon" href="{{ asset('images/icons/icon-512x512.png') }}">
 
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         <style>
             @media (max-width: 768px) {
                 .mobile-safe-padding {
@@ -55,7 +54,7 @@
         {% block stylesheets %}{% endblock %}
         {% block javascripts %}{% endblock %}
     </head>
-    <body class="h-screen flex overflow-hidden bg-gray-100">
+    <body class="h-screen flex overflow-auto bg-gray-100">
     
         <!-- Off-canvas menu for mobile -->
         <div class="fixed inset-0 flex z-40 md:hidden" id="mobileMenu" style="display: none;">
@@ -401,7 +400,7 @@
         📲 Installer l'App
     </button>
     
-    <script src="https://unpkg.com/pulltorefreshjs"></script>
-    <script src="{{ asset('js/pull-to-refresh.js') }}"></script>
+    <!--<script src="https://unpkg.com/pulltorefreshjs"></script>
+    <script src="{{ asset('js/pull-to-refresh.js') }}"></script>-->
 
 </html>
