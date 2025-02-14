@@ -33,6 +33,9 @@ class YouthController extends AbstractController
         $filterSector = $request->query->all('filter_sector');
         $ageGroup = $request->query->get('age_group');
 
+        // Sauvegarder la page courante dans la session
+        $request->getSession()->set('youth_list_page', $page);
+
         // Get all churches and sectors for the filters
         $churches = $entityManager->getRepository(Church::class)->findAll();
         $sectors = $entityManager->getRepository(Church::class)->findDistinctSectors();
@@ -163,6 +166,11 @@ class YouthController extends AbstractController
             'totalPages' => ceil($totalAttendances / $limit),
             'presence' => $presence,
             'month' => $month,
+            'returnPage' => $request->getSession()->get('youth_list_page', 1),
+            'search' => $request->query->get('search'),
+            'filter_church' => $request->query->all('filter_church'),
+            'filter_sector' => $request->query->all('filter_sector'),
+            'age_group' => $request->query->get('age_group')
         ]);
     }
 
