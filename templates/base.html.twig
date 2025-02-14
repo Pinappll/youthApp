@@ -286,6 +286,16 @@
 
         {% block javascript_footer %}
             <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                document.querySelectorAll("input, textarea").forEach(input => {
+                    input.addEventListener("focus", function () {
+                        setTimeout(() => {
+                            this.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }, 100);
+                    });
+                });
+            });
+
             document.addEventListener("DOMContentLoaded", function() {
                 const inputs = document.querySelectorAll("input, textarea");
 

@@ -42,7 +42,9 @@ self.addEventListener("fetch", (event) => {
       () => new Response("Offline", { status: 503 })
     );
   }
-
+  if (event.request.mode === "navigate") {
+    return fetch(event.request);
+  }
   event.respondWith(
     caches.match(event.request).then((response) => {
       return (
