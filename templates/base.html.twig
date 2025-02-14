@@ -286,27 +286,7 @@
 
         {% block javascript_footer %}
             <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                document.querySelectorAll("input, textarea").forEach(input => {
-                    input.addEventListener("focus", function () {
-                        setTimeout(() => {
-                            this.scrollIntoView({ behavior: "smooth", block: "center" });
-                        }, 100);
-                    });
-                });
-            });
-
-            document.addEventListener("DOMContentLoaded", function() {
-                const inputs = document.querySelectorAll("input, textarea");
-
-                inputs.forEach(input => {
-                    input.addEventListener("click", function() {
-                        setTimeout(() => {
-                            this.focus();
-                        }, 100); // Petit délai pour éviter une perte de focus immédiate
-                    });
-                });
-            });
+            
 
                 // Mobile menu functionality
                 document.addEventListener('DOMContentLoaded', function() {
@@ -349,80 +329,56 @@
                     }
                 }
 
-                if ("serviceWorker" in navigator) {
-                    navigator.serviceWorker.register("/sw.js").then((registration) => {
-                        registration.update(); // Met à jour le SW après login
-                    });
-
-                    navigator.serviceWorker.ready.then((registration) => {
-                        if (navigator.onLine) {
-                            registration.active.postMessage({ action: "clear-cache" });
-                        }
-                    });
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js')
+                    .then(function () {console.log('Enregistrement reussi.')})
+                    .catch(function (e) {console.error(e)});
                 }
 
-                if (window.matchMedia("(display-mode: standalone)").matches) {
-                    if (window.location.pathname === "/login") {
-                        window.location.href = "/";
-                    }
-                }
+                
 
-                document.addEventListener("DOMContentLoaded", function() {
-                    const logoutForm = document.getElementById("logout-form");
-                    if (logoutForm) {
-                        logoutForm.addEventListener("submit", function() {
-                            if ("caches" in window) {
-                                caches.keys().then((names) => {
-                                    names.forEach((name) => caches.delete(name));
-                                });
-                            }
-                            if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-                                navigator.serviceWorker.controller.postMessage({ action: "clear-cache" });
-                            }
-                        });
-                    }
-                });
+                
             </script>
             {% block javascripts_inline %}{% endblock %}
         {% endblock %}
         <script>
-    // let deferredPrompt;
+            let deferredPrompt;
 
-    // window.addEventListener("beforeinstallprompt", (event) => {
-    //     event.preventDefault();
-    //     deferredPrompt = event;
+            window.addEventListener("beforeinstallprompt", (event) => {
+                event.preventDefault();
+                deferredPrompt = event;
 
-    //     // Vérifier si l'utilisateur est sur mobile
-    //     if (window.matchMedia("(max-width: 768px)").matches) {
-    //         const installBtn = document.getElementById("installBtn");
-    //         installBtn.style.display = "block";
+                // Vérifier si l'utilisateur est sur mobile
+                if (window.matchMedia("(max-width: 768px)").matches) {
+                    const installBtn = document.getElementById("installBtn");
+                    installBtn.style.display = "block";
 
-    //         installBtn.addEventListener("click", () => {
-    //             deferredPrompt.prompt();
-                
-    //             deferredPrompt.userChoice.then((choiceResult) => {
-    //                 if (choiceResult.outcome === "accepted") {
-    //                     console.log("L'utilisateur a accepté l'installation.");
-    //                 } else {
-    //                     console.log("L'utilisateur a refusé l'installation.");
-    //                 }
-    //                 deferredPrompt = null;
-    //             });
-    //         });
-    //     }
-    // });
+                    installBtn.addEventListener("click", () => {
+                        deferredPrompt.prompt();
+                        
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === "accepted") {
+                                console.log("L'utilisateur a accepté l'installation.");
+                            } else {
+                                console.log("L'utilisateur a refusé l'installation.");
+                            }
+                            deferredPrompt = null;
+                        });
+                    });
+                }
+            });
 
-    // window.addEventListener("appinstalled", () => {
-    //     console.log("L'application a été installée.");
-    //     document.getElementById("installBtn").style.display = "none";
-    // });
-</script>
+            window.addEventListener("appinstalled", () => {
+                console.log("L'application a été installée.");
+                document.getElementById("installBtn").style.display = "none";
+            });
+        </script>
 
 
     </body>
-    {# <button id="installBtn" class="fixed bottom-5 right-5 bg-indigo-600 text-white px-4 py-2 rounded-full shadow-lg hidden">
+    <button id="installBtn" class="fixed bottom-5 right-5 bg-indigo-600 text-white px-4 py-2 rounded-full shadow-lg hidden">
         📲 Installer l'App
-    </button> #}
+    </button>
     
 
 
